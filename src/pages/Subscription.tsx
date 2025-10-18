@@ -1,13 +1,11 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Check, Zap } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { CreditCard, Check, Zap, Loader2 } from "lucide-react";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 const Subscription = () => {
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const { subscribed, planName, subscriptionEnd, loading, openCheckout, openCustomerPortal } = useSubscription();
 
   const plans = [
     {
@@ -25,6 +23,7 @@ const Subscription = () => {
       name: "Pro",
       price: "49€",
       period: "/mois",
+      priceId: "price_1SJg6KQbGfkLt4CuZqQBG9RQ",
       features: [
         "Chantiers illimités",
         "Calculs automatiques",
@@ -38,6 +37,7 @@ const Subscription = () => {
       name: "Annuel",
       price: "490€",
       period: "/an",
+      priceId: "price_1SJg6LQbGfkLt4Cui1lUWvcf",
       features: [
         "Tout du plan Pro",
         "-2 mois offerts",
@@ -48,24 +48,8 @@ const Subscription = () => {
     },
   ];
 
-  const handleSubscribe = async (planName: string) => {
-    setLoading(true);
-    
-    try {
-      // TODO: Intégrer Stripe Checkout
-      toast({
-        title: "En cours de développement",
-        description: "L'intégration Stripe sera disponible prochainement",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+  const handleSubscribe = async (priceId: string) => {
+    await openCheckout(priceId);
   };
 
   return (
@@ -87,15 +71,33 @@ const Subscription = () => {
           <CardDescription>Votre abonnement en cours</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-lg font-bold">Plan Gratuit (Essai)</p>
-              <p className="text-sm text-muted-foreground">
-                7 jours restants
-              </p>
+          {loading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin" />
             </div>
-            <Badge>Essai</Badge>
-          </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-lg font-bold">Plan {planName}</p>
+                  {subscriptionEnd && (
+                    <p className="text-sm text-muted-foreground">
+                      Expire le {new Date(subscriptionEnd).toLocaleDateString('fr-FR')}
+                    </p>
+                  )}
+                </div>
+                <Badge variant={subscribed ? "default" : "secondary"}>
+                  {subscribed ? "Actif" : "Essai"}
+                </Badge>
+              </div>
+              {subscribed && (
+                <Button variant="outline" className="w-full" onClick={openCustomerPortal}>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Gérer mon abonnement
+                </Button>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -135,10 +137,14 @@ const Subscription = () => {
                 <Button 
                   className="w-full"
                   variant={plan.isPopular ? "default" : "outline"}
-                  onClick={() => handleSubscribe(plan.name)}
-                  disabled={loading || plan.name === "Gratuit"}
+                  onClick={() => plan.priceId && handleSubscribe(plan.priceId)}
+                  disabled={loading || plan.name === "Gratuit" || (planName === plan.name && subscribed)}
                 >
-                  {plan.name === "Gratuit" ? "Plan actuel" : "Choisir ce plan"}
+                  {plan.name === "Gratuit" 
+                    ? "Plan actuel" 
+                    : (planName === plan.name && subscribed) 
+                      ? "Plan actif" 
+                      : "Choisir ce plan"}
                 </Button>
               </CardContent>
             </Card>
@@ -155,13 +161,21 @@ const Subscription = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">
-            Aucune carte enregistrée pour le moment.
-          </p>
-          <Button variant="outline" className="mt-4">
-            <CreditCard className="mr-2 h-4 w-4" />
-            Ajouter une carte
-          </Button>
+          {subscribed ? (
+            <div className="space-y-4">
+              <p className="text-muted-foreground">
+                Gérez vos informations de paiement via le portail client Stripe.
+              </p>
+              <Button variant="outline" onClick={openCustomerPortal}>
+                <CreditCard className="mr-2 h-4 w-4" />
+                Gérer mes moyens de paiement
+              </Button>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">
+              Aucune carte enregistrée. Souscrivez à un plan payant pour ajouter une carte.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

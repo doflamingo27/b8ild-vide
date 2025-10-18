@@ -17,6 +17,7 @@ import QuoteManager from "@/components/project/QuoteManager";
 import InvoiceManager from "@/components/project/InvoiceManager";
 import TeamAssignment from "@/components/project/TeamAssignment";
 import ExpensesManager from "@/components/project/ExpensesManager";
+import ExportManager from "@/components/ExportManager";
 
 interface Chantier {
   id: string;
