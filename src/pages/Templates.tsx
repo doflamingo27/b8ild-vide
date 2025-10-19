@@ -5,6 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import EmptyState from "@/components/EmptyState";
+import { Files } from "lucide-react";
+import { labels, emptyStates, toasts } from "@/lib/content";
 
 const Templates = () => {
   const { user } = useAuth();
@@ -29,7 +32,7 @@ const Templates = () => {
 
   const handleUseTemplate = async (template: any) => {
     toast({
-      title: "Template sélectionné",
+      title: toasts.created,
       description: "Redirection vers la création de chantier...",
     });
     
@@ -41,9 +44,11 @@ const Templates = () => {
   if (!entreprise) {
     return (
       <DashboardLayout>
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Chargement...</p>
-        </div>
+        <EmptyState
+          icon={Files}
+          title="Chargement..."
+          text="Chargement de vos templates..."
+        />
       </DashboardLayout>
     );
   }
@@ -52,7 +57,7 @@ const Templates = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Templates de chantiers</h1>
+          <h1 className="text-3xl font-bold mb-2">{labels.nav.templates}</h1>
           <p className="text-muted-foreground">
             Gagnez du temps en créant vos chantiers à partir de templates pré-configurés
           </p>

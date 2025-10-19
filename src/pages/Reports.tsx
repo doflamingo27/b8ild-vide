@@ -5,10 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useCalculations } from "@/hooks/useCalculations";
 import ExportManager from "@/components/ExportManager";
+import EmptyState from "@/components/EmptyState";
+import { labels, emptyStates } from "@/lib/content";
+import { useNavigate } from "react-router-dom";
 
 const Reports = () => {
   const [chantiers, setChantiers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadChantiers();
@@ -54,8 +58,8 @@ const Reports = () => {
     <div className="space-y-8 animate-fade-up">
       <div>
         <h1 className="text-4xl font-black text-gradient-primary flex items-center gap-3">
-          <FileText className="h-9 w-9 text-primary" />
-          Rapports
+          <FileText className="h-9 w-9 text-primary" aria-hidden="true" />
+          {labels.nav.reports}
         </h1>
         <p className="text-muted-foreground mt-2 text-lg">
           Consultez et exportez vos rapports de chantiers
@@ -66,22 +70,20 @@ const Reports = () => {
         {loading ? (
           <Card className="card-premium">
             <CardContent className="pt-16 pb-16 text-center">
-              <Loader2 className="h-12 w-12 mx-auto animate-spin text-primary mb-4" />
+              <Loader2 className="h-12 w-12 mx-auto animate-spin text-primary mb-4" aria-hidden="true" />
               <p className="text-muted-foreground font-medium">Chargement des rapports...</p>
             </CardContent>
           </Card>
         ) : chantiers.length === 0 ? (
-          <Card className="card-premium">
-            <CardContent className="pt-16 pb-16 text-center">
-              <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <p className="text-xl font-semibold text-muted-foreground mb-2">
-                Aucun rapport disponible
-              </p>
-              <p className="text-muted-foreground">
-                Créez un chantier pour générer des rapports
-              </p>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={FileText}
+            title={emptyStates.reports.title}
+            text={emptyStates.reports.text}
+            primaryAction={{
+              label: emptyStates.reports.primary,
+              onClick: () => navigate("/projects"),
+            }}
+          />
         ) : (
           chantiers.map((chantier) => {
             const membres = chantier.equipe_chantier?.map((ec: any) => ec.membres_equipe) || [];

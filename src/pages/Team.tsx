@@ -11,6 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Pencil, Trash2, Users, Calculator } from "lucide-react";
 import { useCalculations } from "@/hooks/useCalculations";
+import EmptyState from "@/components/EmptyState";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import { labels, placeholders, toasts, emptyStates, tooltips, modals, tables } from "@/lib/content";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Membre {
   id: string;
@@ -29,6 +33,8 @@ const Team = () => {
   const { toast } = useToast();
   const [membres, setMembres] = useState<Membre[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [entrepriseId, setEntrepriseId] = useState<string | null>(null);
   const [editingMembre, setEditingMembre] = useState<Membre | null>(null);
@@ -100,7 +106,7 @@ const Team = () => {
           .eq("id", editingMembre.id);
 
         if (error) throw error;
-        toast({ title: "Membre mis à jour", description: "Les informations ont été enregistrées." });
+        toast({ title: toasts.updated, description: "Les informations ont été enregistrées." });
       } else {
         const { error } = await supabase
           .from("membres_equipe")
@@ -111,14 +117,14 @@ const Team = () => {
           });
 
         if (error) throw error;
-        toast({ title: "Membre ajouté", description: "Le membre a été ajouté à votre équipe." });
+        toast({ title: toasts.created, description: "Le membre a été ajouté à votre équipe." });
       }
 
       setDialogOpen(false);
       resetForm();
       loadMembres();
     } catch (error: any) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      toast({ title: "Erreur", description: toasts.errorGeneric, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -139,19 +145,27 @@ const Team = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer ce membre ?")) return;
+    setDeleteId(id);
+    setConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
 
     try {
       const { error } = await supabase
         .from("membres_equipe")
         .update({ actif: false })
-        .eq("id", id);
+        .eq("id", deleteId);
 
       if (error) throw error;
-      toast({ title: "Membre désactivé", description: "Le membre a été retiré de l'équipe." });
+      toast({ title: toasts.deactivated, description: "Le membre a été retiré de l'équipe." });
       loadMembres();
     } catch (error: any) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+      toast({ title: "Erreur", description: toasts.errorGeneric, variant: "destructive" });
+    } finally {
+      setConfirmOpen(false);
+      setDeleteId(null);
     }
   };
 
@@ -170,11 +184,18 @@ const Team = () => {
 
   return (
     <div className="space-y-8 animate-fade-up">
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        onConfirm={confirmDelete}
+        variant="delete"
+      />
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-black text-gradient-primary flex items-center gap-3">
-            <Users className="h-9 w-9 text-primary" />
-            Gestion de l'équipe
+            <Users className="h-9 w-9 text-primary" aria-hidden="true" />
+            {labels.nav.team}
           </h1>
           <p className="text-muted-foreground mt-2 text-lg">
             Gérez les membres de votre équipe et leurs coûts
@@ -185,9 +206,14 @@ const Team = () => {
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button size="lg" className="gap-2 font-bold">
-              <UserPlus className="h-5 w-5" />
-              Ajouter un membre
+            <Button 
+              size="lg" 
+              className="gap-2 font-bold"
+              aria-label={labels.actions.add}
+              title={labels.actions.add}
+            >
+              <UserPlus className="h-5 w-5" aria-hidden="true" />
+              {emptyStates.team.primary}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
@@ -203,60 +229,68 @@ const Team = () => {
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="prenom" className="font-semibold">Prénom</Label>
+                    <Label htmlFor="prenom" className="font-semibold">{labels.forms.memberFirstname}</Label>
                     <Input
                       id="prenom"
                       value={formData.prenom}
                       onChange={(e) => setFormData({ ...formData, prenom: e.target.value })}
+                      placeholder={placeholders.team.firstname}
                       required
+                      aria-label={labels.forms.memberFirstname}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="nom" className="font-semibold">Nom</Label>
+                    <Label htmlFor="nom" className="font-semibold">{labels.forms.memberLastname}</Label>
                     <Input
                       id="nom"
                       value={formData.nom}
                       onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
+                      placeholder={placeholders.team.lastname}
                       required
+                      aria-label={labels.forms.memberLastname}
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="poste" className="font-semibold">Poste</Label>
+                    <Label htmlFor="poste" className="font-semibold">{labels.forms.memberRole}</Label>
                     <Input
                       id="poste"
                       value={formData.poste}
                       onChange={(e) => setFormData({ ...formData, poste: e.target.value })}
-                      placeholder="Ex: Chef de chantier"
+                      placeholder={placeholders.team.role}
                       required
+                      aria-label={labels.forms.memberRole}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="specialite" className="font-semibold">Spécialité</Label>
+                    <Label htmlFor="specialite" className="font-semibold">{labels.forms.memberSkill}</Label>
                     <Input
                       id="specialite"
                       value={formData.specialite}
                       onChange={(e) => setFormData({ ...formData, specialite: e.target.value })}
-                      placeholder="Ex: Électricité"
+                      placeholder={placeholders.team.skill}
                       required
+                      aria-label={labels.forms.memberSkill}
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="taux_horaire" className="font-semibold">Taux horaire (€/h)</Label>
+                  <Label htmlFor="taux_horaire" className="font-semibold">{labels.forms.hourlyRate}</Label>
                   <Input
                     id="taux_horaire"
                     type="number"
                     step="0.01"
                     value={formData.taux_horaire}
                     onChange={(e) => setFormData({ ...formData, taux_horaire: parseFloat(e.target.value) })}
+                    placeholder={placeholders.team.rate}
                     required
+                    aria-label={labels.forms.hourlyRate}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="charges_salariales" className="font-semibold">Charges salariales (%)</Label>
+                    <Label htmlFor="charges_salariales" className="font-semibold">{labels.forms.employeeCharges}</Label>
                     <Input
                       id="charges_salariales"
                       type="number"
@@ -264,10 +298,11 @@ const Team = () => {
                       value={formData.charges_salariales}
                       onChange={(e) => setFormData({ ...formData, charges_salariales: parseFloat(e.target.value) })}
                       required
+                      aria-label={labels.forms.employeeCharges}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="charges_patronales" className="font-semibold">Charges patronales (%)</Label>
+                    <Label htmlFor="charges_patronales" className="font-semibold">{labels.forms.employerCharges}</Label>
                     <Input
                       id="charges_patronales"
                       type="number"
@@ -275,13 +310,14 @@ const Team = () => {
                       value={formData.charges_patronales}
                       onChange={(e) => setFormData({ ...formData, charges_patronales: parseFloat(e.target.value) })}
                       required
+                      aria-label={labels.forms.employerCharges}
                     />
                   </div>
                 </div>
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={loading} size="lg" className="font-bold">
-                  {editingMembre ? "Mettre à jour" : "Ajouter"}
+                  {editingMembre ? labels.actions.edit : labels.actions.add}
                 </Button>
               </DialogFooter>
             </form>
@@ -292,11 +328,22 @@ const Team = () => {
       <Card className="card-premium">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-2xl font-black">
-            <Calculator className="h-6 w-6 text-primary" />
+            <Calculator className="h-6 w-6 text-primary" aria-hidden="true" />
             Coût total de l'équipe
           </CardTitle>
           <CardDescription className="text-base">
-            Coût journalier de l'équipe complète (membres actifs uniquement)
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="cursor-help underline decoration-dotted">
+                    {tooltips.kpiTeamCost}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{tooltips.kpiTeamCost}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -318,22 +365,28 @@ const Team = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-bold">Nom</TableHead>
-                  <TableHead className="font-bold">Poste</TableHead>
-                  <TableHead className="font-bold">Spécialité</TableHead>
-                  <TableHead className="text-right font-bold">Taux horaire</TableHead>
-                  <TableHead className="text-right font-bold">Coût/jour</TableHead>
-                  <TableHead className="font-bold">Statut</TableHead>
-                  <TableHead className="text-right font-bold">Actions</TableHead>
+                  <TableHead className="font-bold">{tables.team.columns[0]}</TableHead>
+                  <TableHead className="font-bold">{tables.team.columns[1]}</TableHead>
+                  <TableHead className="font-bold">{tables.team.columns[2]}</TableHead>
+                  <TableHead className="text-right font-bold">{tables.team.columns[3]}</TableHead>
+                  <TableHead className="text-right font-bold">{tables.team.columns[5]}</TableHead>
+                  <TableHead className="font-bold">{tables.team.columns[6]}</TableHead>
+                  <TableHead className="text-right font-bold">{tables.team.columns[7]}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {membres.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
-                      <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                      <p className="font-semibold">Aucun membre dans l'équipe</p>
-                      <p className="text-sm">Ajoutez votre premier membre pour commencer</p>
+                    <TableCell colSpan={7} className="text-center py-12">
+                      <EmptyState
+                        icon={Users}
+                        title={emptyStates.team.title}
+                        text={emptyStates.team.text}
+                        primaryAction={{
+                          label: emptyStates.team.primary,
+                          onClick: () => setDialogOpen(true),
+                        }}
+                      />
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -350,7 +403,7 @@ const Team = () => {
                       </TableCell>
                       <TableCell>
                         <Badge variant={membre.actif ? "default" : "secondary"} className="font-semibold">
-                          {membre.actif ? "Actif" : "Inactif"}
+                          {membre.actif ? labels.forms.active : "Inactif"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -361,8 +414,10 @@ const Team = () => {
                             onClick={() => handleEdit(membre)}
                             disabled={!membre.actif}
                             className="hover:bg-primary/10"
+                            aria-label={labels.actions.edit}
+                            title={labels.actions.edit}
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" aria-hidden="true" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -370,8 +425,10 @@ const Team = () => {
                             onClick={() => handleDelete(membre.id)}
                             disabled={!membre.actif}
                             className="hover:bg-danger/10"
+                            aria-label={labels.actions.delete}
+                            title={labels.actions.delete}
                           >
-                            <Trash2 className="h-4 w-4 text-danger" />
+                            <Trash2 className="h-4 w-4 text-danger" aria-hidden="true" />
                           </Button>
                         </div>
                       </TableCell>
