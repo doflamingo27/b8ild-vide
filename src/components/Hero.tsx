@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-construction.jpg";
+import { labels, microcopy } from "@/lib/content";
 
 const Hero = () => {
   return (
@@ -22,12 +23,11 @@ const Hero = () => {
             </div>
             
             <h1 className="text-4xl font-extrabold leading-tight text-white lg:text-5xl xl:text-6xl">
-              Pilotez la rentabilité de vos chantiers{" "}
-              <span className="text-gradient-accent">en temps réel</span>
+              {microcopy.heroTitle}
             </h1>
             
             <p className="text-lg text-white/90 lg:text-xl max-w-xl">
-              B8ild calcule automatiquement le jour exact où votre chantier devient déficitaire.
+              {microcopy.heroSubtitle}
             </p>
             
             <p className="text-xl font-bold text-accent animate-fade-up" style={{ animationDelay: "0.2s" }}>
@@ -39,10 +39,12 @@ const Hero = () => {
                 size="lg" 
                 className="gap-2 hover-glow text-base font-bold shadow-xl hover:scale-105 transition-all" 
                 asChild
+                aria-label={labels.actions.tryFree}
+                title={labels.actions.tryFree}
               >
                 <Link to="/auth?mode=signup">
-                  Essayer gratuitement 7 jours
-                  <ArrowRight className="h-5 w-5" />
+                  {labels.actions.tryFree}
+                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
                 </Link>
               </Button>
               <Button 
@@ -50,10 +52,12 @@ const Hero = () => {
                 variant="outline" 
                 className="gap-2 border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm" 
                 asChild
+                aria-label={labels.actions.startDemo}
+                title={labels.actions.startDemo}
               >
                 <a href="#how-it-works">
-                  <Play className="h-5 w-5" />
-                  Voir la démo
+                  <Play className="h-5 w-5" aria-hidden="true" />
+                  {labels.actions.startDemo}
                 </a>
               </Button>
             </div>

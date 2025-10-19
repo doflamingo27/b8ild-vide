@@ -1,10 +1,11 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Users, FolderKanban, FileText, User, CreditCard, LogOut, HardHat } from "lucide-react";
+import { Home, Users, FolderKanban, FileText, User, CreditCard, LogOut, HardHat, Files } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import NotificationBell from "./NotificationBell";
+import { labels, toasts } from "@/lib/content";
 
 const Header = () => {
   const location = useLocation();
@@ -12,21 +13,30 @@ const Header = () => {
   const { toast } = useToast();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Déconnexion réussie",
-      description: "À bientôt !",
-    });
-    navigate("/auth");
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: toasts.errorGeneric,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Déconnecté",
+        description: "À bientôt !",
+      });
+      navigate("/auth");
+    }
   };
 
   const navItems = [
-    { path: "/dashboard", label: "Tableau de bord", icon: Home },
-    { path: "/team", label: "Équipe", icon: Users },
-    { path: "/projects", label: "Chantiers", icon: FolderKanban },
-    { path: "/reports", label: "Rapports", icon: FileText },
-    { path: "/profile", label: "Profil", icon: User },
-    { path: "/subscription", label: "Abonnement", icon: CreditCard },
+    { path: "/dashboard", label: labels.nav.dashboard, icon: Home },
+    { path: "/team", label: labels.nav.team, icon: Users },
+    { path: "/projects", label: labels.nav.projects, icon: FolderKanban },
+    { path: "/templates", label: labels.nav.templates, icon: Files },
+    { path: "/reports", label: labels.nav.reports, icon: FileText },
+    { path: "/profile", label: labels.nav.profile, icon: User },
+    { path: "/subscription", label: labels.nav.billing, icon: CreditCard },
   ];
 
   return (
@@ -36,7 +46,7 @@ const Header = () => {
           <div className="p-2 rounded-xl bg-primary group-hover:shadow-glow-primary transition-smooth">
             <HardHat className="h-6 w-6 text-primary-foreground" />
           </div>
-          <span className="text-2xl font-black text-gradient-primary">B8ild</span>
+          <span className="text-2xl font-black text-gradient-primary">{labels.app.name}</span>
         </div>
 
         <nav className="hidden md:flex items-center gap-2">
@@ -68,8 +78,10 @@ const Header = () => {
             size="sm" 
             onClick={handleLogout} 
             className="gap-2 hover:border-destructive hover:text-destructive"
+            aria-label="Se déconnecter"
+            title="Se déconnecter"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-4 w-4" aria-hidden="true" />
             Déconnexion
           </Button>
         </div>

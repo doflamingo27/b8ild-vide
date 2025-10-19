@@ -14,6 +14,7 @@ import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/useAuth";
+import { inApp } from "@/lib/content";
 
 const NotificationBell = () => {
   const { user } = useAuth();
@@ -95,8 +96,8 @@ const NotificationBell = () => {
         <ScrollArea className="h-[400px]">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <Bell className="h-12 w-12 mb-2 opacity-20" />
-              <p className="text-sm">Aucune notification</p>
+              <Bell className="h-12 w-12 mb-2 opacity-20" aria-hidden="true" />
+              <p className="text-sm">{inApp.bellEmpty}</p>
             </div>
           ) : (
             <div className="divide-y">

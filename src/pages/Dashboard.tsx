@@ -3,12 +3,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import KPICard from "@/components/KPICard";
 import ProjectCard from "@/components/ProjectCard";
+import EmptyState from "@/components/EmptyState";
 import { TrendingUp, Users, AlertTriangle, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { labels, emptyStates, tooltips } from "@/lib/content";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalProjects: 0,
     avgRentabilite: 0,
@@ -111,7 +114,7 @@ const Dashboard = () => {
     <div className="space-y-8 animate-fade-up">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-black text-gradient-primary">Tableau de bord</h1>
+          <h1 className="text-4xl font-black text-gradient-primary">{labels.nav.dashboard}</h1>
           <p className="text-muted-foreground mt-2 text-lg">
             Bienvenue {user?.user_metadata?.prenom} ! Voici un aperçu de votre activité.
           </p>
@@ -154,18 +157,19 @@ const Dashboard = () => {
         </div>
         
         {recentProjects.length === 0 ? (
-          <div className="card-premium text-center py-16">
-            <Building className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <p className="text-xl font-semibold text-muted-foreground mb-2">
-              Aucun chantier pour le moment
-            </p>
-            <p className="text-muted-foreground mb-6">
-              Créez votre premier chantier pour commencer à suivre sa rentabilité
-            </p>
-            <Button size="lg" asChild>
-              <Link to="/projects">Créer un chantier</Link>
-            </Button>
-          </div>
+          <EmptyState
+            icon={Building}
+            title={emptyStates.dashboard.title}
+            text={emptyStates.dashboard.text}
+            primaryAction={{
+              label: emptyStates.dashboard.primary,
+              onClick: () => navigate("/projects"),
+            }}
+            secondaryAction={{
+              label: emptyStates.dashboard.secondary,
+              onClick: () => navigate("/team"),
+            }}
+          />
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {recentProjects.map((project) => {

@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Building } from "lucide-react";
 import ProjectCard from "@/components/ProjectCard";
+import EmptyState from "@/components/EmptyState";
+import { labels, placeholders, toasts, emptyStates } from "@/lib/content";
 
 const Projects = () => {
   const { user } = useAuth();
@@ -82,7 +84,7 @@ const Projects = () => {
       if (error) throw error;
 
       toast({
-        title: "Chantier créé",
+        title: toasts.created,
         description: "Le nouveau chantier a été ajouté avec succès.",
       });
 
@@ -98,7 +100,7 @@ const Projects = () => {
     } catch (error: any) {
       toast({
         title: "Erreur",
-        description: error.message,
+        description: toasts.errorGeneric,
         variant: "destructive",
       });
     } finally {
@@ -117,8 +119,8 @@ const Projects = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-black text-gradient-primary flex items-center gap-3">
-            <Building className="h-9 w-9 text-primary" />
-            Mes Chantiers
+            <Building className="h-9 w-9 text-primary" aria-hidden="true" />
+            {labels.nav.projects}
           </h1>
           <p className="text-muted-foreground mt-2 text-lg">
             Gérez et suivez tous vos chantiers
@@ -126,9 +128,9 @@ const Projects = () => {
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="lg" className="gap-2 font-bold">
-              <Plus className="h-5 w-5" />
-              Nouveau chantier
+            <Button size="lg" className="gap-2 font-bold" aria-label={labels.actions.create} title={labels.actions.create}>
+              <Plus className="h-5 w-5" aria-hidden="true" />
+              {emptyStates.projects.primary}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-xl">
@@ -141,52 +143,58 @@ const Projects = () => {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="nom_chantier" className="font-semibold">Nom du chantier</Label>
+                  <Label htmlFor="nom_chantier" className="font-semibold">{labels.forms.projectName}</Label>
                   <Input
                     id="nom_chantier"
                     value={formData.nom_chantier}
                     onChange={(e) => setFormData({ ...formData, nom_chantier: e.target.value })}
-                    placeholder="Ex: Rénovation appartement 75001"
+                    placeholder={placeholders.project.name}
                     required
+                    aria-label={labels.forms.projectName}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="client" className="font-semibold">Client</Label>
+                  <Label htmlFor="client" className="font-semibold">{labels.forms.projectClient}</Label>
                   <Input
                     id="client"
                     value={formData.client}
                     onChange={(e) => setFormData({ ...formData, client: e.target.value })}
-                    placeholder="Ex: M. Dupont"
+                    placeholder={placeholders.project.client}
                     required
+                    aria-label={labels.forms.projectClient}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="adresse" className="font-semibold">Adresse</Label>
+                  <Label htmlFor="adresse" className="font-semibold">{labels.forms.projectAddress}</Label>
                   <Input
                     id="adresse"
                     value={formData.adresse}
                     onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
-                    placeholder="Ex: 123 Rue de la Paix, 75001 Paris"
+                    placeholder={placeholders.project.address}
                     required
+                    aria-label={labels.forms.projectAddress}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="duree_estimee" className="font-semibold">Durée estimée (jours)</Label>
+                  <Label htmlFor="duree_estimee" className="font-semibold">{labels.forms.projectDuration}</Label>
                   <Input
                     id="duree_estimee"
                     type="number"
                     value={formData.duree_estimee}
                     onChange={(e) => setFormData({ ...formData, duree_estimee: parseInt(e.target.value) })}
+                    placeholder={placeholders.project.duration}
                     required
+                    aria-label={labels.forms.projectDuration}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description" className="font-semibold">Description</Label>
+                  <Label htmlFor="description" className="font-semibold">{labels.forms.projectDescription}</Label>
                   <Input
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Détails du chantier..."
+                    aria-label={labels.forms.projectDescription}
                   />
                 </div>
               </div>
@@ -201,31 +209,32 @@ const Projects = () => {
       </div>
 
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" aria-hidden="true" />
         <Input
-          placeholder="Rechercher un chantier..."
+          placeholder={placeholders.generic.search}
           className="pl-12 h-12 text-base"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          aria-label={placeholders.generic.search}
         />
       </div>
 
-      {filteredProjects.length === 0 ? (
-        <div className="card-premium text-center py-16">
-          <Building className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-          <p className="text-xl font-semibold text-muted-foreground mb-2">
-            {searchTerm ? "Aucun chantier trouvé" : "Aucun chantier pour le moment"}
-          </p>
-          <p className="text-muted-foreground mb-6">
-            {searchTerm ? "Essayez avec d'autres mots-clés" : "Créez votre premier chantier pour commencer"}
-          </p>
-          {!searchTerm && (
-            <Button size="lg" onClick={() => setDialogOpen(true)}>
-              <Plus className="mr-2 h-5 w-5" />
-              Créer un chantier
-            </Button>
-          )}
-        </div>
+      {filteredProjects.length === 0 && !searchTerm ? (
+        <EmptyState
+          icon={Building}
+          title={emptyStates.projects.title}
+          text={emptyStates.projects.text}
+          primaryAction={{
+            label: emptyStates.projects.primary,
+            onClick: () => setDialogOpen(true),
+          }}
+        />
+      ) : filteredProjects.length === 0 ? (
+        <EmptyState
+          icon={Search}
+          title="Aucun chantier trouvé"
+          text="Essayez avec d'autres mots-clés"
+        />
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredProjects.map((project) => (

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import patternBg from "@/assets/pattern-construction.jpg";
+import { labels } from "@/lib/content";
 
 const CTA = () => {
   return (
@@ -22,14 +23,27 @@ const CTA = () => {
             <span className="font-semibold text-accent">Essai gratuit 7 jours, sans carte bancaire.</span>
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button size="lg" className="gap-2 hover-glow shadow-xl" asChild>
+            <Button 
+              size="lg" 
+              className="gap-2 hover-glow shadow-xl" 
+              asChild
+              aria-label={labels.actions.tryFree}
+              title={labels.actions.tryFree}
+            >
               <Link to="/auth?mode=signup">
-                Commencer maintenant
-                <ArrowRight className="h-5 w-5" />
+                {labels.actions.tryFree}
+                <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-2 border-white/30 bg-white/10 text-white hover:bg-white/20" asChild>
-              <a href="#pricing">Planifier une démo</a>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-2 border-white/30 bg-white/10 text-white hover:bg-white/20" 
+              asChild
+              aria-label={labels.actions.startDemo}
+              title={labels.actions.startDemo}
+            >
+              <a href="#pricing">{labels.actions.startDemo}</a>
             </Button>
           </div>
           <p className="text-sm text-white/80 font-medium">
