@@ -775,6 +775,193 @@ export type Database = {
           },
         ]
       }
+      tender_inbox: {
+        Row: {
+          body: string | null
+          created_at: string | null
+          id: string
+          received_at: string
+          sender_email: string
+          status: string
+          subject: string | null
+          tender_id: string | null
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string | null
+          id?: string
+          received_at?: string
+          sender_email: string
+          status?: string
+          subject?: string | null
+          tender_id?: string | null
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string | null
+          id?: string
+          received_at?: string
+          sender_email?: string
+          status?: string
+          subject?: string | null
+          tender_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_inbox_tender_id_fkey"
+            columns: ["tender_id"]
+            isOneToOne: false
+            referencedRelation: "tenders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tender_matches: {
+        Row: {
+          created_at: string | null
+          id: string
+          match_details: Json | null
+          score: number
+          tender_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          match_details?: Json | null
+          score: number
+          tender_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          match_details?: Json | null
+          score?: number
+          tender_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_matches_tender_id_fkey"
+            columns: ["tender_id"]
+            isOneToOne: false
+            referencedRelation: "tenders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tender_profiles: {
+        Row: {
+          alert_email: boolean
+          alert_push: boolean
+          budget_max: number | null
+          budget_min: number | null
+          certifications: string[] | null
+          created_at: string | null
+          departments: string[] | null
+          id: string
+          radius_km: number | null
+          score_threshold: number
+          specialties: string[]
+          updated_at: string | null
+          user_id: string
+          zone_type: string
+        }
+        Insert: {
+          alert_email?: boolean
+          alert_push?: boolean
+          budget_max?: number | null
+          budget_min?: number | null
+          certifications?: string[] | null
+          created_at?: string | null
+          departments?: string[] | null
+          id?: string
+          radius_km?: number | null
+          score_threshold?: number
+          specialties?: string[]
+          updated_at?: string | null
+          user_id: string
+          zone_type?: string
+        }
+        Update: {
+          alert_email?: boolean
+          alert_push?: boolean
+          budget_max?: number | null
+          budget_min?: number | null
+          certifications?: string[] | null
+          created_at?: string | null
+          departments?: string[] | null
+          id?: string
+          radius_km?: number | null
+          score_threshold?: number
+          specialties?: string[]
+          updated_at?: string | null
+          user_id?: string
+          zone_type?: string
+        }
+        Relationships: []
+      }
+      tenders: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          buyer: string
+          category: string | null
+          city: string | null
+          created_at: string | null
+          dce_url: string | null
+          deadline: string | null
+          department: string | null
+          description: string | null
+          id: string
+          postal_code: string | null
+          source: string | null
+          source_url: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          buyer: string
+          category?: string | null
+          city?: string | null
+          created_at?: string | null
+          dce_url?: string | null
+          deadline?: string | null
+          department?: string | null
+          description?: string | null
+          id?: string
+          postal_code?: string | null
+          source?: string | null
+          source_url?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          buyer?: string
+          category?: string | null
+          city?: string | null
+          created_at?: string | null
+          dce_url?: string | null
+          deadline?: string | null
+          department?: string | null
+          description?: string | null
+          id?: string
+          postal_code?: string | null
+          source?: string | null
+          source_url?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null

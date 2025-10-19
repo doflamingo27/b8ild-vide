@@ -42,7 +42,6 @@ const TendersProfile = () => {
   const [certifications, setCertifications] = useState<string>(profile?.certifications?.join(", ") || "");
   const [alertEmail, setAlertEmail] = useState<boolean>(profile?.alert_email ?? true);
   const [alertPush, setAlertPush] = useState<boolean>(profile?.alert_push ?? true);
-  const [alertFrequency, setAlertFrequency] = useState<string>(profile?.alert_frequency || "realtime");
   const [scoreThreshold, setScoreThreshold] = useState<string>(profile?.score_threshold?.toString() || "70");
 
   const saveMutation = useMutation({
@@ -58,7 +57,6 @@ const TendersProfile = () => {
         certifications: certifications.split(",").map((c) => c.trim()).filter(Boolean),
         alert_email: alertEmail,
         alert_push: alertPush,
-        alert_frequency: alertFrequency,
         score_threshold: parseInt(scoreThreshold),
       };
 
@@ -240,20 +238,6 @@ const TendersProfile = () => {
                 checked={alertPush}
                 onCheckedChange={setAlertPush}
               />
-            </div>
-
-            <div>
-              <Label htmlFor="frequency">{labels.forms.profileAO_Frequency}</Label>
-              <Select value={alertFrequency} onValueChange={setAlertFrequency}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="realtime">Temps réel</SelectItem>
-                  <SelectItem value="daily">Quotidien</SelectItem>
-                  <SelectItem value="weekly">Hebdomadaire</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div>
