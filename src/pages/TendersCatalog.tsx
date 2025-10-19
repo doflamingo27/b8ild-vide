@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import EmptyState from "@/components/EmptyState";
 
 const TendersCatalog = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [keyword, setKeyword] = useState("");
   const [department, setDepartment] = useState("");
 
@@ -116,14 +118,10 @@ const TendersCatalog = () => {
             icon={FileText}
             title={emptyStates.tendersCatalog.title}
             text={emptyStates.tendersCatalog.text}
-            action={
-              <Link to="/tenders/import">
-                <Button size="lg" className="gap-2">
-                  <FileText className="h-5 w-5" />
-                  {emptyStates.tendersCatalog.primary}
-                </Button>
-              </Link>
-            }
+            primaryAction={{
+              label: emptyStates.tendersCatalog.primary || "Importer un AO",
+              onClick: () => navigate("/tenders/import")
+            }}
           />
         ) : (
           <div className="space-y-3">

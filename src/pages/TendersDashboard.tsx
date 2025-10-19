@@ -1,17 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate, Link } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, TrendingUp, Calendar, Target, Settings } from "lucide-react";
-import { Link } from "react-router-dom";
 import { labels, emptyStates } from "@/lib/content";
 import EmptyState from "@/components/EmptyState";
 
 const TendersDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const { data: profile } = useQuery({
     queryKey: ["tender-profile", user?.id],
@@ -96,14 +97,10 @@ const TendersDashboard = () => {
           icon={Target}
           title={emptyStates.tendersDashboard.title}
           text={emptyStates.tendersDashboard.text}
-          action={
-            <Link to="/tenders/profile">
-              <Button size="lg" className="gap-2">
-                <Settings className="h-5 w-5" />
-                {emptyStates.tendersDashboard.primary}
-              </Button>
-            </Link>
-          }
+          primaryAction={{
+            label: "Configurer mon profil AO",
+            onClick: () => navigate("/tenders/profile")
+          }}
         />
       </DashboardLayout>
     );
