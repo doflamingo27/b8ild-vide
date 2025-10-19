@@ -17,6 +17,12 @@ import Reports from "./pages/Reports";
 import Subscription from "./pages/Subscription";
 import AuditHistory from "./pages/AuditHistory";
 import NotFound from "./pages/NotFound";
+import Templates from "./pages/Templates";
+import TendersDashboard from "./pages/TendersDashboard";
+import TendersProfile from "./pages/TendersProfile";
+import TendersCatalog from "./pages/TendersCatalog";
+import TendersImport from "./pages/TendersImport";
+import TendersInbox from "./pages/TendersInbox";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +51,12 @@ const App = () => (
               <Route path="/reports" element={<Reports />} />
               <Route path="/subscription" element={<Subscription />} />
               <Route path="/audit" element={<AuditHistory />} />
+              <Route path="/templates" element={<Templates />} />
+              <Route path="/tenders" element={<TendersDashboard />} />
+              <Route path="/tenders/profile" element={<TendersProfile />} />
+              <Route path="/tenders/catalog" element={<TendersCatalog />} />
+              <Route path="/tenders/import" element={<TendersImport />} />
+              <Route path="/tenders/inbox" element={<TendersInbox />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

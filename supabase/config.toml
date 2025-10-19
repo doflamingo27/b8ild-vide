@@ -2,3 +2,15 @@ project_id = "yjlekwaxmjjuhajdjgax"
 
 [functions.extract-document-data]
 verify_jwt = false
+
+[functions.calculate-tender-match]
+verify_jwt = false
+
+[functions.parse-tender-email]
+verify_jwt = false
+
+[functions.send-tender-alert]
+verify_jwt = false
+
+[functions.send-tender-digest]
+verify_jwt = false
