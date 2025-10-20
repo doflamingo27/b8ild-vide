@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import DashboardLayout from "@/components/DashboardLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -30,38 +31,40 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/team" element={<Team />} />
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/projects/:id" element={<ProjectDetail />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/subscription" element={<Subscription />} />
-              <Route path="/audit" element={<AuditHistory />} />
-              <Route path="/templates" element={<Templates />} />
-              <Route path="/tenders" element={<TendersDashboard />} />
-              <Route path="/tenders/profile" element={<TendersProfile />} />
-              <Route path="/tenders/catalog" element={<TendersCatalog />} />
-              <Route path="/tenders/import" element={<TendersImport />} />
-              <Route path="/tenders/inbox" element={<TendersInbox />} />
-            </Route>
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <SubscriptionProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/team" element={<Team />} />
+                <Route path="/projects" element={<Projects />} />
+                <Route path="/projects/:id" element={<ProjectDetail />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/subscription" element={<Subscription />} />
+                <Route path="/audit" element={<AuditHistory />} />
+                <Route path="/templates" element={<Templates />} />
+                <Route path="/tenders" element={<TendersDashboard />} />
+                <Route path="/tenders/profile" element={<TendersProfile />} />
+                <Route path="/tenders/catalog" element={<TendersCatalog />} />
+                <Route path="/tenders/import" element={<TendersImport />} />
+                <Route path="/tenders/inbox" element={<TendersInbox />} />
+              </Route>
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </SubscriptionProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
