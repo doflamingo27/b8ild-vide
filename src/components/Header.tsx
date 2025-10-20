@@ -6,6 +6,13 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import NotificationBell from "./NotificationBell";
 import { labels, toasts } from "@/lib/content";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 
 const Header = () => {
   const location = useLocation();
@@ -34,10 +41,17 @@ const Header = () => {
     { path: "/team", label: labels.nav.team, icon: Users },
     { path: "/projects", label: labels.nav.projects, icon: FolderKanban },
     { path: "/templates", label: labels.nav.templates, icon: Files },
-    { path: "/tenders", label: labels.nav.tenders, icon: FileText },
     { path: "/reports", label: labels.nav.reports, icon: FileText },
     { path: "/profile", label: labels.nav.profile, icon: User },
     { path: "/subscription", label: labels.nav.billing, icon: CreditCard },
+  ];
+
+  const tendersMenuItems = [
+    { path: "/tenders", label: "Dashboard AO", icon: "📊" },
+    { path: "/tenders/profile", label: "Profil AO", icon: "⚙️" },
+    { path: "/tenders/catalog", label: "Catalogue AO", icon: "📂" },
+    { path: "/tenders/import", label: "Importer AO", icon: "📥" },
+    { path: "/tenders/inbox", label: "Boîte de réception", icon: "📬" },
   ];
 
   return (
@@ -70,6 +84,41 @@ const Header = () => {
               </Link>
             );
           })}
+
+          {/* Dropdown Appels d'offres */}
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="h-9 px-3 gap-2">
+                  <FileText className="h-4 w-4" />
+                  {labels.nav.tenders}
+                </NavigationMenuTrigger>
+                <NavigationMenuContent className="min-w-[220px] p-2 bg-background border rounded-md shadow-lg z-[100]">
+                  <ul className="space-y-1">
+                    {tendersMenuItems.map((item) => {
+                      const isActive = location.pathname === item.path;
+                      return (
+                        <li key={item.path}>
+                          <Link 
+                            to={item.path}
+                            className={cn(
+                              "flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors",
+                              isActive 
+                                ? "bg-accent text-accent-foreground font-medium" 
+                                : "hover:bg-accent hover:text-accent-foreground"
+                            )}
+                          >
+                            <span>{item.icon}</span>
+                            {item.label}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
         </nav>
 
         <div className="flex items-center gap-2">
