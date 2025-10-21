@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useSecureInsert } from "@/hooks/useSecureInsert";
 import { Plus, Trash2, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -19,6 +20,7 @@ interface ExpensesManagerProps {
 
 const ExpensesManager = ({ chantierId, frais, onUpdate }: ExpensesManagerProps) => {
   const { toast } = useToast();
+  const { secureInsert } = useSecureInsert();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -41,19 +43,34 @@ const ExpensesManager = ({ chantierId, frais, onUpdate }: ExpensesManagerProps) 
     setLoading(true);
 
     try {
-      const { error } = await supabase
-        .from("frais_chantier")
-        .insert({
-          ...formData,
+      // Récupérer entreprise_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Non authentifié");
+
+      const { data: entreprise } = await supabase
+        .from('entreprises')
+        .select('id')
+        .eq('proprietaire_user_id', user.id)
+        .single();
+
+      if (!entreprise) throw new Error("Entreprise introuvable");
+
+      // Utiliser la RPC sécurisée
+      const newId = await secureInsert({
+        table: 'frais_chantier',
+        data: {
           chantier_id: chantierId,
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Succès",
-        description: "Le frais a été ajouté avec succès",
+          type_frais: formData.type_frais,
+          montant_total: formData.montant_total,
+          date_frais: formData.date_frais,
+          description: formData.description,
+        },
+        entrepriseId: entreprise.id
       });
+
+      if (!newId) {
+        throw new Error("Échec de l'insertion");
+      }
 
       setOpen(false);
       setFormData({
@@ -66,16 +83,9 @@ const ExpensesManager = ({ chantierId, frais, onUpdate }: ExpensesManagerProps) 
     } catch (error: any) {
       console.error('[ExpensesManager] Insert error:', error);
       
-      // Message spécifique pour erreur RLS
-      const isRLSError = error.message?.includes('row-level security') || 
-                         error.message?.includes('policy') ||
-                         error.code === '42501';
-      
       toast({
         title: "Erreur",
-        description: isRLSError 
-          ? "Accès non autorisé (RLS). Vérifiez vos droits entreprise."
-          : error.message,
+        description: error.message || "Impossible d'enregistrer le frais.",
         variant: "destructive",
       });
     } finally {

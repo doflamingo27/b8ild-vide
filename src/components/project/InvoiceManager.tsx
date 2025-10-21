@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { DocumentFallbackUI } from "@/components/document/DocumentFallbackUI";
 import { useDocumentExtraction } from "@/hooks/useDocumentExtraction";
+import { useSecureInsert } from "@/hooks/useSecureInsert";
 import { labels, placeholders, toasts, modals, tooltips } from "@/lib/content";
 
 interface InvoiceManagerProps {
@@ -24,6 +25,7 @@ interface InvoiceManagerProps {
 const InvoiceManager = ({ chantierId, factures, onUpdate }: InvoiceManagerProps) => {
   const { toast } = useToast();
   const { extractDocument, isExtracting } = useDocumentExtraction();
+  const { secureInsert } = useSecureInsert();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -93,12 +95,24 @@ const InvoiceManager = ({ chantierId, factures, onUpdate }: InvoiceManagerProps)
     setLoading(true);
 
     try {
+      // Récupérer entreprise_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Non authentifié");
+
+      const { data: entreprise } = await supabase
+        .from('entreprises')
+        .select('id')
+        .eq('proprietaire_user_id', user.id)
+        .single();
+
+      if (!entreprise) throw new Error("Entreprise introuvable");
+
       let fichier_url = null;
 
-      // Upload du fichier
+      // Upload du fichier avec préfixe entreprise_id
       if (file) {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${chantierId}-facture-${Date.now()}.${fileExt}`;
+        const fileName = `${entreprise.id}/factures/${Date.now()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
           .from('factures')
           .upload(fileName, file);
@@ -112,21 +126,23 @@ const InvoiceManager = ({ chantierId, factures, onUpdate }: InvoiceManagerProps)
         fichier_url = publicUrl;
       }
 
-      // Créer la facture
-      const { error } = await supabase
-        .from("factures_fournisseurs")
-        .insert({
-          ...formData,
+      // Utiliser la RPC sécurisée
+      const newId = await secureInsert({
+        table: 'factures_fournisseurs',
+        data: {
           chantier_id: chantierId,
+          fournisseur: formData.fournisseur,
+          montant_ht: formData.montant_ht,
+          categorie: formData.categorie,
+          date_facture: formData.date_facture,
           fichier_url,
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Succès",
-        description: "La facture a été ajoutée avec succès",
+        },
+        entrepriseId: entreprise.id
       });
+
+      if (!newId) {
+        throw new Error("Échec de l'insertion");
+      }
 
       setOpen(false);
       setFormData({
@@ -140,16 +156,9 @@ const InvoiceManager = ({ chantierId, factures, onUpdate }: InvoiceManagerProps)
     } catch (error: any) {
       console.error('[InvoiceManager] Insert error:', error);
       
-      // Message spécifique pour erreur RLS
-      const isRLSError = error.message?.includes('row-level security') || 
-                         error.message?.includes('policy') ||
-                         error.code === '42501';
-      
       toast({
         title: "Erreur",
-        description: isRLSError 
-          ? "Accès non autorisé (RLS). Vérifiez vos droits entreprise."
-          : error.message,
+        description: error.message || "Impossible d'enregistrer la facture.",
         variant: "destructive",
       });
     } finally {

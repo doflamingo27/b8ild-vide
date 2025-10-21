@@ -364,7 +364,9 @@ export type Database = {
           chantier_id: string
           confiance: number | null
           created_at: string | null
+          created_by: string | null
           date_facture: string | null
+          entreprise_id: string | null
           extraction_json: Json | null
           fichier_url: string | null
           fournisseur: string | null
@@ -381,7 +383,9 @@ export type Database = {
           chantier_id: string
           confiance?: number | null
           created_at?: string | null
+          created_by?: string | null
           date_facture?: string | null
+          entreprise_id?: string | null
           extraction_json?: Json | null
           fichier_url?: string | null
           fournisseur?: string | null
@@ -398,7 +402,9 @@ export type Database = {
           chantier_id?: string
           confiance?: number | null
           created_at?: string | null
+          created_by?: string | null
           date_facture?: string | null
+          entreprise_id?: string | null
           extraction_json?: Json | null
           fichier_url?: string | null
           fournisseur?: string | null
@@ -424,6 +430,7 @@ export type Database = {
         Row: {
           anchors: Json
           created_at: string | null
+          created_by: string | null
           entreprise_id: string
           field_positions: Json
           fournisseur_nom: string
@@ -434,6 +441,7 @@ export type Database = {
         Insert: {
           anchors?: Json
           created_at?: string | null
+          created_by?: string | null
           entreprise_id: string
           field_positions?: Json
           fournisseur_nom: string
@@ -444,6 +452,7 @@ export type Database = {
         Update: {
           anchors?: Json
           created_at?: string | null
+          created_by?: string | null
           entreprise_id?: string
           field_positions?: Json
           fournisseur_nom?: string
@@ -466,8 +475,10 @@ export type Database = {
           chantier_id: string
           confiance: number | null
           created_at: string | null
+          created_by: string | null
           date_frais: string | null
           description: string | null
+          entreprise_id: string | null
           extraction_json: Json | null
           fournisseur_nom: string | null
           id: string
@@ -481,8 +492,10 @@ export type Database = {
           chantier_id: string
           confiance?: number | null
           created_at?: string | null
+          created_by?: string | null
           date_frais?: string | null
           description?: string | null
+          entreprise_id?: string | null
           extraction_json?: Json | null
           fournisseur_nom?: string | null
           id?: string
@@ -496,8 +509,10 @@ export type Database = {
           chantier_id?: string
           confiance?: number | null
           created_at?: string | null
+          created_by?: string | null
           date_frais?: string | null
           description?: string | null
+          entreprise_id?: string | null
           extraction_json?: Json | null
           fournisseur_nom?: string | null
           id?: string
@@ -853,6 +868,8 @@ export type Database = {
         Row: {
           body: string | null
           created_at: string | null
+          created_by: string | null
+          entreprise_id: string | null
           id: string
           received_at: string
           sender_email: string
@@ -864,6 +881,8 @@ export type Database = {
         Insert: {
           body?: string | null
           created_at?: string | null
+          created_by?: string | null
+          entreprise_id?: string | null
           id?: string
           received_at?: string
           sender_email: string
@@ -875,6 +894,8 @@ export type Database = {
         Update: {
           body?: string | null
           created_at?: string | null
+          created_by?: string | null
+          entreprise_id?: string | null
           id?: string
           received_at?: string
           sender_email?: string
@@ -896,6 +917,8 @@ export type Database = {
       tender_matches: {
         Row: {
           created_at: string | null
+          created_by: string | null
+          entreprise_id: string | null
           id: string
           match_details: Json | null
           score: number
@@ -904,6 +927,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          created_by?: string | null
+          entreprise_id?: string | null
           id?: string
           match_details?: Json | null
           score: number
@@ -912,6 +937,8 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          created_by?: string | null
+          entreprise_id?: string | null
           id?: string
           match_details?: Json | null
           score?: number
@@ -988,11 +1015,14 @@ export type Database = {
           city: string | null
           confiance: number | null
           created_at: string | null
+          created_by: string | null
           dce_url: string | null
           deadline: string | null
           department: string | null
           description: string | null
+          entreprise_id: string | null
           extraction_json: Json | null
+          hash_contenu: string | null
           id: string
           pages_count: number | null
           postal_code: string | null
@@ -1009,11 +1039,14 @@ export type Database = {
           city?: string | null
           confiance?: number | null
           created_at?: string | null
+          created_by?: string | null
           dce_url?: string | null
           deadline?: string | null
           department?: string | null
           description?: string | null
+          entreprise_id?: string | null
           extraction_json?: Json | null
+          hash_contenu?: string | null
           id?: string
           pages_count?: number | null
           postal_code?: string | null
@@ -1030,11 +1063,14 @@ export type Database = {
           city?: string | null
           confiance?: number | null
           created_at?: string | null
+          created_by?: string | null
           dce_url?: string | null
           deadline?: string | null
           department?: string | null
           description?: string | null
+          entreprise_id?: string | null
           extraction_json?: Json | null
+          hash_contenu?: string | null
           id?: string
           pages_count?: number | null
           postal_code?: string | null
@@ -1071,12 +1107,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_current_entreprise: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      insert_extraction_service: {
+        Args: { p_data: Json; p_entreprise_id: string; p_table: string }
+        Returns: string
+      }
+      jwt_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
     }
     Enums: {
