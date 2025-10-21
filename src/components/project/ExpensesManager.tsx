@@ -64,9 +64,18 @@ const ExpensesManager = ({ chantierId, frais, onUpdate }: ExpensesManagerProps) 
       });
       onUpdate();
     } catch (error: any) {
+      console.error('[ExpensesManager] Insert error:', error);
+      
+      // Message spécifique pour erreur RLS
+      const isRLSError = error.message?.includes('row-level security') || 
+                         error.message?.includes('policy') ||
+                         error.code === '42501';
+      
       toast({
         title: "Erreur",
-        description: error.message,
+        description: isRLSError 
+          ? "Accès non autorisé (RLS). Vérifiez vos droits entreprise."
+          : error.message,
         variant: "destructive",
       });
     } finally {

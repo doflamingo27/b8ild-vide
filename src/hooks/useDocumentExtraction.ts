@@ -22,6 +22,32 @@ export const useDocumentExtraction = () => {
     setIsExtracting(true);
     
     try {
+      // Récupérer entreprise_id pour préfixage Storage
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Non authentifié",
+          description: "Vous devez être connecté pour importer des documents.",
+          variant: "destructive"
+        });
+        return { success: false, needsFallback: true };
+      }
+
+      const { data: entreprise, error: entrepriseError } = await supabase
+        .from('entreprises')
+        .select('id')
+        .eq('proprietaire_user_id', user.id)
+        .single();
+
+      if (entrepriseError || !entreprise) {
+        toast({
+          title: "Entreprise non trouvée",
+          description: "Impossible de trouver votre entreprise. Contactez le support.",
+          variant: "destructive"
+        });
+        return { success: false, needsFallback: true };
+      }
+
       // Vérifier taille fichier (20 Mo max)
       if (file.size > 20 * 1024 * 1024) {
         toast({
@@ -32,9 +58,9 @@ export const useDocumentExtraction = () => {
         return { success: false, needsFallback: true };
       }
       
-      // Upload temporaire
+      // Upload temporaire avec préfixage entreprise_id
       const bucket = documentType === 'ao' ? 'documents' : (documentType === 'facture' ? 'factures' : 'devis');
-      const tempPath = `temp-${Date.now()}-${file.name}`;
+      const tempPath = `${entreprise.id}/temp-${Date.now()}-${file.name}`;
       
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from(bucket)
