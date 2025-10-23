@@ -272,53 +272,135 @@ function extractWithRegex(text: string, type: 'facture' | 'frais' | 'ao'): { dat
 }
 
 // ============================================================================
-// MOTEUR 3: OCR (utilise Lovable AI Vision)
+// MOTEUR 3: MULTI-PASS OCR (5 passes avec Lovable AI Vision)
 // ============================================================================
 
-async function performOCR(base64Content: string): Promise<string | null> {
+function calculateReadability(text: string): number {
+  if (!text || text.length < 10) return 0;
+  
+  const alphanumeric = text.match(/[a-zA-Z0-9]/g)?.length || 0;
+  const total = text.length;
+  const ratio = alphanumeric / total;
+  
+  // Bonus pour nombres > 3 chiffres et €
+  const hasNumbers = /\d{3,}/.test(text);
+  const hasEuro = text.includes('€') || /EUR/i.test(text);
+  
+  let score = ratio;
+  if (hasNumbers) score += 0.1;
+  if (hasEuro) score += 0.1;
+  
+  return Math.min(score, 1.0);
+}
+
+async function performMultiPassOCR(base64Content: string): Promise<{ text: string; readability: number; passes: any[] }> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
     console.error('[OCR] LOVABLE_API_KEY manquant');
-    return null;
+    return { text: '', readability: 0, passes: [] };
   }
   
-  try {
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [{
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: "Extrait tout le texte visible dans cette image de document. Renvoie uniquement le texte brut, sans formatage ni commentaire."
-            },
-            {
-              type: "image_url",
-              image_url: { url: `data:image/jpeg;base64,${base64Content}` }
-            }
-          ]
-        }],
-        max_tokens: 4000
-      })
-    });
-    
-    if (!response.ok) {
-      console.error('[OCR] Erreur API:', response.status);
-      return null;
+  const passes = [
+    {
+      name: 'pass1_general',
+      prompt: "Extrait TOUT le texte de ce document. Inclus les nombres, symboles €, pourcentages. Préserve la mise en page. Texte brut uniquement."
+    },
+    {
+      name: 'pass2_numbers_focus',
+      prompt: "Concentre-toi sur les NOMBRES et MONTANTS de ce document. Extrait tous les chiffres avec leur contexte (HT, TVA, TTC, Net à payer, totaux). Inclus les symboles € et %."
+    },
+    {
+      name: 'pass3_structured',
+      prompt: "Lis ce document structuré (facture/devis/AO). Extrait: N° document, SIRET, dates, fournisseur/client, tous les montants avec leurs libellés. Format: libellé: valeur."
+    },
+    {
+      name: 'pass4_tables',
+      prompt: "Si ce document contient des tableaux, extrait les colonnes et lignes. Focus sur: désignation, quantité, prix unitaire, total. Format tabulaire."
+    },
+    {
+      name: 'pass5_last_resort',
+      prompt: "Dernière tentative. Même si le document est flou ou de mauvaise qualité, extrait TOUT ce qui est lisible. Ne rate aucun nombre ni montant."
     }
-    
-    const result = await response.json();
-    return result.choices?.[0]?.message?.content || null;
-  } catch (error) {
-    console.error('[OCR] Exception:', error);
-    return null;
+  ];
+  
+  let bestText = '';
+  let bestReadability = 0;
+  const results: any[] = [];
+  
+  for (const pass of passes) {
+    try {
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [{
+            role: "user",
+            content: [
+              { type: "text", text: pass.prompt },
+              { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Content}` } }
+            ]
+          }],
+          max_tokens: 4000
+        })
+      });
+      
+      if (!response.ok) {
+        results.push({ ...pass, status: 'failed', readability: 0 });
+        continue;
+      }
+      
+      const result = await response.json();
+      const extractedText = result.choices?.[0]?.message?.content || '';
+      const readability = calculateReadability(extractedText);
+      
+      results.push({ ...pass, status: 'success', readability, textLength: extractedText.length });
+      
+      if (readability > bestReadability) {
+        bestText = extractedText;
+        bestReadability = readability;
+      }
+      
+      // Arrêt si excellente qualité
+      if (readability >= 0.80) break;
+      
+    } catch (error) {
+      console.error(`[OCR ${pass.name}] Exception:`, error);
+      results.push({ ...pass, status: 'error', readability: 0 });
+    }
   }
+  
+  return { text: bestText, readability: bestReadability, passes: results };
+}
+
+// ============================================================================
+// DÉTECTION TYPE DOCUMENT
+// ============================================================================
+
+function classifyDocument(text: string): { type: 'invoice' | 'receipt' | 'ao' | 'table' | 'unknown'; confidence: number } {
+  const lower = text.toLowerCase();
+  
+  // Invoice/Receipt
+  if (lower.match(/facture|invoice|net.?à.?payer|n°.?facture|siret|siren/)) {
+    return { type: 'invoice', confidence: 0.9 };
+  }
+  
+  // Appel d'offres
+  if (lower.match(/appel.?d.?offres|dce|date.?limite|acheteur|procédure|maître.?d.?ouvrage/)) {
+    return { type: 'ao', confidence: 0.9 };
+  }
+  
+  // Table (CSV-like)
+  const lines = text.split('\n');
+  const hasSeparators = lines.filter(l => l.match(/[;\t|]/)).length > lines.length * 0.3;
+  if (hasSeparators || lower.match(/qte|quantité|p\.?u\.?|prix.?unitaire|total/)) {
+    return { type: 'table', confidence: 0.75 };
+  }
+  
+  return { type: 'unknown', confidence: 0.3 };
 }
 
 // ============================================================================
@@ -430,35 +512,53 @@ serve(async (req) => {
     let bestResult: any = null;
     let bestConfidence = 0;
     
-    // MOTEUR 2: PDF TEXTE + REGEX (simulation via OCR)
-    debug.steps.push({ step: 'regex_text', status: 'start' });
+    // MULTI-PASS OCR + EXTRACTION
+    debug.steps.push({ step: 'multipass_ocr', status: 'start' });
     
-    const ocrText = await performOCR(base64Content);
+    const ocrResult = await performMultiPassOCR(base64Content);
+    const tooBlurry = ocrResult.readability < 0.35;
     
-    if (ocrText) {
-      debug.steps.push({ step: 'ocr', status: 'success', textLength: ocrText.length });
+    debug.steps.push({ 
+      step: 'multipass_ocr', 
+      status: ocrResult.readability > 0 ? 'success' : 'failed',
+      readability: ocrResult.readability,
+      passes: ocrResult.passes,
+      reason: tooBlurry ? 'Qualité faible - extraction partielle attendue' : undefined
+    });
+    
+    if (ocrResult.text) {
+      // Détection type
+      const docType = classifyDocument(ocrResult.text);
+      debug.steps.push({ 
+        step: 'classify', 
+        status: 'success',
+        detected_type: docType.type,
+        confidence: docType.confidence
+      });
       
-      const regexResult = extractWithRegex(ocrText, documentType === 'ao' ? 'ao' : 'facture');
+      // Extraction regex
+      const regexResult = extractWithRegex(
+        ocrResult.text, 
+        documentType === 'ao' ? 'ao' : 'facture'
+      );
+      
       debug.steps.push({ 
         step: 'regex_extraction', 
-        status: 'success', 
+        status: regexResult.confidence > 0.3 ? 'success' : 'partial',
         confidence: regexResult.confidence,
         candidates: regexResult.candidates
       });
       
-      if (regexResult.confidence >= 0.80) {
-        bestResult = regexResult.data;
-        bestConfidence = regexResult.confidence;
-      } else if (regexResult.confidence > bestConfidence) {
+      if (regexResult.confidence > bestConfidence) {
         bestResult = regexResult.data;
         bestConfidence = regexResult.confidence;
       }
       
-      // MOTEUR 4: TEMPLATES (si SIRET détecté)
+      // TEMPLATES (si SIRET détecté)
       if (regexResult.data?.siret) {
         debug.steps.push({ step: 'template_check', status: 'start' });
         const templateResult = await applyTemplate(
-          ocrText,
+          ocrResult.text,
           supabaseClient,
           entrepriseId,
           regexResult.data.siret
@@ -472,12 +572,29 @@ serve(async (req) => {
           debug.steps.push({ step: 'template_check', status: 'no_match' });
         }
       }
+      
+      // Marquer "too_blurry" mais continuer
+      if (tooBlurry && bestResult) {
+        bestResult.meta = { ...bestResult.meta, too_blurry: true };
+      }
     } else {
-      debug.steps.push({ step: 'ocr', status: 'failed', reason: 'Document illisible ou API OCR indisponible' });
+      debug.steps.push({ step: 'extraction', status: 'failed', reason: 'Aucun texte extrait - document vide ou corrompu' });
     }
     
     // Résultat final
     const needsFallback = bestConfidence < 0.80;
+    
+    // Message amélioré (JAMAIS "format non reconnu")
+    let message = '';
+    if (bestConfidence >= 0.90) {
+      message = 'Extraction réussie — vérifiez et enregistrez.';
+    } else if (bestConfidence >= 0.80) {
+      message = 'Extraction partielle — quelques champs à confirmer.';
+    } else if (bestConfidence >= 0.50) {
+      message = 'Extraction partielle — on a prérempli ce qu\'on a pu. Utilisez les chips à droite pour valider rapidement.';
+    } else {
+      message = 'Extraction partielle — on a prérempli ce qu\'on a pu. Utilisez les chips à droite : cliquez \'HT\', puis pointez la zone sur le document.';
+    }
     
     const response = {
       success: !needsFallback,
@@ -486,13 +603,8 @@ serve(async (req) => {
       data: bestResult,
       partialData: needsFallback ? bestResult : null,
       debug,
-      message: bestConfidence >= 0.90 
-        ? 'Extraction réussie — vérifiez et enregistrez.'
-        : bestConfidence >= 0.80
-        ? 'Extraction partielle — quelques champs à confirmer.'
-        : bestConfidence >= 0.50
-        ? 'Extraction incomplète — utilisez le mapping assisté.'
-        : 'Document trop flou ou format non reconnu — mapping manuel requis.'
+      message,
+      helpLink: needsFallback ? 'scan-guide' : null
     };
     
     return new Response(

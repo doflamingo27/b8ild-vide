@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { DocumentFallbackUI } from "@/components/document/DocumentFallbackUI";
+import { FastFixUI } from "@/components/document/FastFixUI";
 import { useDocumentExtraction } from "@/hooks/useDocumentExtraction";
 import { useSecureInsert } from "@/hooks/useSecureInsert";
 import { useTemplateManager } from "@/hooks/useTemplateManager";
@@ -389,7 +389,7 @@ const InvoiceManager = ({ chantierId, factures, onUpdate }: InvoiceManagerProps)
       <Dialog open={showFallback} onOpenChange={setShowFallback}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] p-0">
           {fileUrl && (
-            <DocumentFallbackUI
+            <FastFixUI
               documentUrl={fileUrl}
               partialData={extractedData}
               documentType="facture"

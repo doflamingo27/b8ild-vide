@@ -43,11 +43,14 @@ const ExtractionDebugPanel = ({ debug, visible = false }: ExtractionDebugPanelPr
   const getStepLabel = (step: string) => {
     const labels: Record<string, string> = {
       download: 'Téléchargement',
+      multipass_ocr: 'Multi-pass OCR (5 tentatives)',
+      classify: 'Détection type document',
       ocr: 'OCR (Reconnaissance texte)',
       regex_text: 'Extraction Regex (texte)',
       regex_extraction: 'Extraction Regex',
       template_check: 'Vérification template fournisseur',
       template_applied: 'Application template',
+      extraction: 'Extraction générale',
       csv_parse: 'Analyse CSV/XLSX',
       ao_focus: 'Extraction AO spécialisée'
     };
@@ -118,6 +121,38 @@ const ExtractionDebugPanel = ({ debug, visible = false }: ExtractionDebugPanelPr
                     <p className="text-xs text-muted-foreground">
                       Texte extrait: {step.textLength} caractères
                     </p>
+                  )}
+                  
+                  {(step as any).readability !== undefined && (
+                    <p className="text-xs text-muted-foreground">
+                      Lisibilité: {((step as any).readability * 100).toFixed(0)}%
+                    </p>
+                  )}
+                  
+                  {(step as any).detected_type && (
+                    <p className="text-xs text-muted-foreground">
+                      Type détecté: {(step as any).detected_type}
+                    </p>
+                  )}
+                  
+                  {(step as any).passes && (
+                    <details className="text-xs mt-2">
+                      <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                        Voir passes OCR ({(step as any).passes.length})
+                      </summary>
+                      <div className="mt-2 space-y-1 pl-2">
+                        {(step as any).passes.map((pass: any, idx: number) => (
+                          <div key={idx} className="flex items-center gap-2 text-xs">
+                            {pass.status === 'success' ? (
+                              <CheckCircle className="h-3 w-3 text-green-500" />
+                            ) : (
+                              <XCircle className="h-3 w-3 text-red-500" />
+                            )}
+                            <span>{pass.name}: {(pass.readability * 100).toFixed(0)}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
                   )}
                   
                   {step.candidates && (
