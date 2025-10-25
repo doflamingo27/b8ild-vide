@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, AlertCircle, Edit } from 'lucide-react';
+import { CheckCircle2, AlertCircle, XCircle, Edit } from 'lucide-react';
 
 type Props = {
   module: 'ao' | 'factures' | 'frais';
@@ -12,21 +12,35 @@ type Props = {
 };
 
 export default function AutoFillRecap({ module, confidence, fields, onEdit }: Props) {
-  const getConfidenceColor = () => {
-    if (confidence >= 0.80) return 'bg-green-100 text-green-800 border-green-300';
-    if (confidence >= 0.60) return 'bg-amber-100 text-amber-800 border-amber-300';
-    return 'bg-red-100 text-red-800 border-red-300';
+  const getConfidenceBadge = () => {
+    if (confidence >= 0.80) {
+      return (
+        <Badge className="gap-2 bg-green-500 hover:bg-green-600 text-white border-green-600">
+          <CheckCircle2 className="h-4 w-4" />
+          Excellente extraction ({Math.round(confidence * 100)}%)
+        </Badge>
+      );
+    }
+    if (confidence >= 0.60) {
+      return (
+        <Badge className="gap-2 bg-orange-500 hover:bg-orange-600 text-white border-orange-600">
+          <AlertCircle className="h-4 w-4" />
+          Vérification recommandée ({Math.round(confidence * 100)}%)
+        </Badge>
+      );
+    }
+    return (
+      <Badge className="gap-2 bg-red-500 hover:bg-red-600 text-white border-red-600">
+        <XCircle className="h-4 w-4" />
+        Qualité faible ({Math.round(confidence * 100)}%)
+      </Badge>
+    );
   };
 
   const getConfidenceMessage = () => {
     if (confidence >= 0.80) return "Extraction terminée — c'est prêt.";
     if (confidence >= 0.60) return "Extraction terminée — vérifiez rapidement.";
     return "Extraction terminée — qualité faible, pensez à vérifier.";
-  };
-
-  const getConfidenceIcon = () => {
-    if (confidence >= 0.80) return <CheckCircle className="h-5 w-5" />;
-    return <AlertCircle className="h-5 w-5" />;
   };
 
   const formatValue = (val: any) => {
@@ -36,17 +50,14 @@ export default function AutoFillRecap({ module, confidence, fields, onEdit }: Pr
   };
 
   return (
-    <Card>
+    <Card className="border-2 border-primary/20 shadow-lg">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Extraction automatique terminée</CardTitle>
-            <CardDescription>{getConfidenceMessage()}</CardDescription>
+            <CardTitle className="text-2xl">Extraction automatique terminée</CardTitle>
+            <CardDescription className="text-base mt-2">{getConfidenceMessage()}</CardDescription>
           </div>
-          <Badge className={`${getConfidenceColor()} flex items-center gap-2`}>
-            {getConfidenceIcon()}
-            Confiance : {Math.round(confidence * 100)}%
-          </Badge>
+          {getConfidenceBadge()}
         </div>
       </CardHeader>
       <CardContent className="space-y-6">

@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Users, FolderKanban, FileText, User, CreditCard, LogOut, HardHat, Files } from "lucide-react";
+import { Home, Users, FolderKanban, FileText, User, CreditCard, LogOut, HardHat, Files, Upload, Receipt } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -54,6 +54,11 @@ const Header = () => {
     { path: "/tenders/inbox", label: "Boîte de réception", icon: "📬" },
   ];
 
+  const importMenuItems = [
+    { path: "/import/ao", label: "Importer un AO", icon: Upload },
+    { path: "/import/facture", label: "Importer une Facture", icon: Receipt },
+  ];
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-sm">
       <div className="container flex h-16 items-center justify-between">
@@ -84,6 +89,42 @@ const Header = () => {
               </Link>
             );
           })}
+
+          {/* Dropdown Import Documents */}
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="h-9 px-3 gap-2">
+                  <Upload className="h-4 w-4" />
+                  Import
+                </NavigationMenuTrigger>
+                <NavigationMenuContent className="min-w-[220px] p-2 bg-background border rounded-md shadow-lg z-[100]">
+                  <ul className="space-y-1">
+                    {importMenuItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = location.pathname === item.path;
+                      return (
+                        <li key={item.path}>
+                          <Link 
+                            to={item.path}
+                            className={cn(
+                              "flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors",
+                              isActive 
+                                ? "bg-accent text-accent-foreground font-medium" 
+                                : "hover:bg-accent hover:text-accent-foreground"
+                            )}
+                          >
+                            <Icon className="h-4 w-4" />
+                            {item.label}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
 
           {/* Dropdown Appels d'offres */}
           <NavigationMenu>

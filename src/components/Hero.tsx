@@ -64,12 +64,12 @@ const Hero = () => {
 
             <div className="flex flex-wrap gap-8 pt-6 animate-fade-up" style={{ animationDelay: "0.6s" }}>
               <div className="space-y-1">
-                <div className="text-4xl font-black text-accent font-mono">68%</div>
-                <div className="text-sm text-white/80">d'artisans découvrent leurs pertes après</div>
+                <div className="text-4xl font-black text-accent font-mono drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">68%</div>
+                <div className="text-sm text-white/90 font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.3)]">d'artisans découvrent leurs pertes après</div>
               </div>
               <div className="space-y-1">
-                <div className="text-4xl font-black text-accent font-mono">-15k€</div>
-                <div className="text-sm text-white/80">perte moyenne par chantier non suivi</div>
+                <div className="text-4xl font-black text-accent font-mono drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">-15k€</div>
+                <div className="text-sm text-white/90 font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.3)]">perte moyenne par chantier non suivi</div>
               </div>
             </div>
           </div>

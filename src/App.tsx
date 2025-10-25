@@ -24,6 +24,8 @@ import TendersProfile from "./pages/TendersProfile";
 import TendersCatalog from "./pages/TendersCatalog";
 import TendersImport from "./pages/TendersImport";
 import TendersInbox from "./pages/TendersInbox";
+import ImportAO from "./pages/ImportAO";
+import ImportFacture from "./pages/ImportFacture";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +61,8 @@ const App = () => (
                 <Route path="/tenders/catalog" element={<TendersCatalog />} />
                 <Route path="/tenders/import" element={<TendersImport />} />
                 <Route path="/tenders/inbox" element={<TendersInbox />} />
+                <Route path="/import/ao" element={<ImportAO />} />
+                <Route path="/import/facture" element={<ImportFacture />} />
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

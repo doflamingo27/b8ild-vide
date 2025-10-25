@@ -4,7 +4,8 @@ import { saveExtraction } from '@/services/extractionService';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, Loader2, AlertCircle } from 'lucide-react';
+import { Upload, Loader2, AlertCircle, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import AutoFillRecap from './AutoFillRecap';
 
 type Props = {
@@ -76,20 +77,35 @@ export default function AutoExtractUploader({ module, entrepriseId, onSaved }: P
 
   return (
     <div className="space-y-6">
-      <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors">
+      <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors relative">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Info className="h-5 w-5 text-muted-foreground absolute top-4 right-4 cursor-help" />
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            <p className="text-sm">
+              Formats acceptés : PDF (texte ou scanné), JPG, PNG. 
+              L'extraction est 100% automatique avec OCR multipasse.
+              Qualité optimale : PDF texte ou photo nette.
+            </p>
+          </TooltipContent>
+        </Tooltip>
+        
         <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={onFile} className="hidden" 
           id={`upload-${module}`} disabled={loading} />
         <label htmlFor={`upload-${module}`} className="cursor-pointer flex flex-col items-center gap-3">
           {loading ? (
             <>
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              <p className="text-sm">Analyse en cours…</p>
+              <p className="text-sm font-medium">Analyse en cours (OCR + extraction)…</p>
+              <p className="text-xs text-muted-foreground">Cela peut prendre 10-30 secondes</p>
             </>
           ) : (
             <>
               <Upload className="h-12 w-12 text-muted-foreground" />
-              <p className="font-medium">Cliquer pour uploader</p>
-              <p className="text-xs text-muted-foreground">PDF, JPG, PNG (max 20 Mo)</p>
+              <p className="font-medium text-lg">Cliquer pour uploader un document</p>
+              <p className="text-sm text-muted-foreground">PDF, JPG, PNG (max 20 Mo)</p>
+              <p className="text-xs text-muted-foreground mt-2">Extraction automatique 100% — Aucune saisie manuelle</p>
             </>
           )}
         </label>
