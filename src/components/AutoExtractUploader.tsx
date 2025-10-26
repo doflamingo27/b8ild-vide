@@ -30,12 +30,17 @@ export default function AutoExtractUploader({ module, entrepriseId, onSaved }: P
     setExtraction(null);
     setSavedId(null);
     
+    console.log('[UPLOAD] Starting extraction for:', f.name, 'Type:', f.type, 'Size:', f.size);
+    
     try {
       if (f.size > 20 * 1024 * 1024) {
         throw new Error('Fichier trop volumineux (max 20 Mo).');
       }
       
+      console.log('[UPLOAD] Calling extractFromFile...');
       const res = await extractFromFile(f, entrepriseId);
+      console.log('[UPLOAD] Extraction result:', res);
+      
       setExtraction(res);
       
       let table: 'tenders' | 'factures_fournisseurs' | 'frais_chantier' = 'frais_chantier';
@@ -48,13 +53,34 @@ export default function AutoExtractUploader({ module, entrepriseId, onSaved }: P
           postal_code: res.fields.aoCP, deadline: res.fields.aoDeadline, budget_min: res.fields.aoBudget, source: 'Import' };
       } else if (module === 'factures') {
         table = 'factures_fournisseurs';
-        payload = { ...payload, montant_ht: res.fields.ht, tva_pct: res.fields.tvaPct, tva_montant: res.fields.tvaAmt,
-          siret: res.fields.siret, date_facture: res.fields.dateDoc, categorie: 'Autres', fournisseur: 'À identifier' };
+        
+        const montant_ttc = res.fields.net ?? res.fields.ttc ?? null;
+        
+        if (!montant_ttc && !res.fields.ht) {
+          throw new Error('Impossible d\'extraire les montants. Vérifiez le document.');
+        }
+        
+        payload = { 
+          ...payload, 
+          montant_ht: res.fields.ht, 
+          montant_ttc: montant_ttc,
+          tva_pct: res.fields.tvaPct, 
+          tva_montant: res.fields.tvaAmt,
+          siret: res.fields.siret, 
+          date_facture: res.fields.dateDoc, 
+          categorie: 'Autres', 
+          fournisseur: res.fields.siret || 'À identifier'
+        };
+        
+        console.log('[UPLOAD] Facture payload:', payload);
       } else {
         payload = { ...payload, type_frais: 'Autres', montant_total: res.fields.net ?? res.fields.ttc ?? res.fields.ht };
       }
 
+      console.log('[UPLOAD] Saving to table:', table, 'Payload:', payload);
       const id = await saveExtraction(table, entrepriseId, payload);
+      console.log('[UPLOAD] Saved successfully with ID:', id);
+      
       setSavedId(id);
       
       const confidencePct = Math.round(res.confidence * 100);
@@ -68,8 +94,24 @@ export default function AutoExtractUploader({ module, entrepriseId, onSaved }: P
       
       onSaved?.(id);
     } catch (e: any) {
+      console.error('[UPLOAD] ERROR:', e);
       setError(e.message || 'Erreur extraction');
-      toast({ title: "Erreur d'extraction", description: e.message, variant: "destructive" });
+      
+      let userMessage = e.message;
+      
+      if (e.message?.includes('PDF')) {
+        userMessage = 'Erreur lecture PDF. Essayez avec un fichier non protégé.';
+      } else if (e.message?.includes('OCR')) {
+        userMessage = 'OCR impossible. Photo trop floue ou fichier corrompu.';
+      } else if (e.message?.includes('RPC') || e.message?.includes('not authorized')) {
+        userMessage = 'Erreur de sauvegarde. Vérifiez vos permissions.';
+      }
+      
+      toast({ 
+        title: "Erreur d'extraction", 
+        description: userMessage, 
+        variant: "destructive" 
+      });
     } finally {
       setLoading(false);
     }
