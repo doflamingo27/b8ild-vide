@@ -8,9 +8,23 @@ import type { ExtractionResult, DocType } from './types';
 
 function classifyDoc(text: string): DocType {
   const s = text.toLowerCase();
-  if (/appel d'offres|appel d'offres|ao|dce|date limite|acheteur|procédure/.test(s)) return 'ao';
-  if (/facture|invoice|net à payer|n° facture|n o facture|n°facture/.test(s)) return 'invoice';
-  if (/(qte|quantité|prix unitaire|total)/i.test(s)) return 'table';
+  
+  // Scoring pour classification plus robuste
+  let scoreAO = 0;
+  let scoreInvoice = 0;
+  
+  if (/appel\s*d['']offres?|ao\s*n[°o]|dce|date\s*limite|acheteur|procédure/i.test(s)) scoreAO += 3;
+  if (/organisme|maître\s*d['']ouvrage|pouvoir\s*adjudicateur/i.test(s)) scoreAO += 2;
+  if (/budget.*estim/i.test(s)) scoreAO += 1;
+  
+  if (/facture|invoice|n[°o]\s*facture/i.test(s)) scoreInvoice += 3;
+  if (/net\s*à\s*payer|montant\s*ttc/i.test(s)) scoreInvoice += 2;
+  if (/siret|siren|tva/i.test(s)) scoreInvoice += 1;
+  
+  if (scoreAO > scoreInvoice) return 'ao';
+  if (scoreInvoice > 0) return 'invoice';
+  if (/(qte|quantité|prix\s*unitaire|total)/i.test(s)) return 'table';
+  
   return 'unknown';
 }
 
@@ -125,6 +139,12 @@ export async function extractFromFile(file: File, entrepriseId?: string): Promis
     }
   }
   
+  // Extraction nom fournisseur
+  const fournisseurMatch = allText.match(R.FOURNISSEUR);
+  if (fournisseurMatch?.[1]) {
+    addCandidate(candidatesMap, 'fournisseur', fournisseurMatch[1].trim(), 'regex', 0.15);
+  }
+  
   // ========== ÉTAPE 2: HEURISTIQUES (source:'heur', score 0.15) ==========
   // Dernier bloc HT→TVA→TTC (priorité au Net à payer si présent)
   if (netMatch?.[1]) {
@@ -213,6 +233,15 @@ export async function extractFromFile(file: File, entrepriseId?: string): Promis
   
   const bestAoVille = pickBest(candidatesMap.get('aoVille') || []);
   fields.aoVille = bestAoVille?.value || null;
+  
+  const bestFournisseur = pickBest(candidatesMap.get('fournisseur') || []);
+  fields.fournisseur = bestFournisseur?.value || null;
+  
+  // Fallback pour montants manquants
+  if (!fields.ht && fields.ttc && fields.tvaPct) {
+    fields.ht = fields.ttc / (1 + fields.tvaPct / 100);
+    console.log('[EXTRACT] Calculated HT from TTC:', fields.ht);
+  }
   
   // ========== ÉTAPE 6: VÉRIFICATION TOTAUX & SCORE ==========
   const totalsOk = checkTotals(fields.ht, fields.tvaPct, fields.tvaAmt, fields.net ?? fields.ttc ?? null);

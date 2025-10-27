@@ -55,24 +55,36 @@ export default function AutoExtractUploader({ module, entrepriseId, onSaved }: P
         table = 'factures_fournisseurs';
         
         const montant_ttc = res.fields.net ?? res.fields.ttc ?? null;
+        const montant_ht = res.fields.ht ?? null;
         
-        if (!montant_ttc && !res.fields.ht) {
-          throw new Error('Impossible d\'extraire les montants. Vérifiez le document.');
+        // ✅ CORRECTION : Utiliser le nom du fournisseur, pas le SIRET
+        const nomFournisseur = res.fields.fournisseur || res.fields.siret || 'Fournisseur inconnu';
+        
+        console.log('[UPLOAD] Facture extraction:', {
+          montant_ht,
+          montant_ttc,
+          tva_pct: res.fields.tvaPct,
+          fournisseur: nomFournisseur,
+          siret: res.fields.siret
+        });
+        
+        if (!montant_ttc && !montant_ht) {
+          throw new Error('Impossible d\'extraire les montants. Document illisible ou format non supporté.');
         }
         
         payload = { 
           ...payload, 
-          montant_ht: res.fields.ht, 
+          montant_ht: montant_ht, 
           montant_ttc: montant_ttc,
           tva_pct: res.fields.tvaPct, 
           tva_montant: res.fields.tvaAmt,
           siret: res.fields.siret, 
           date_facture: res.fields.dateDoc, 
           categorie: 'Autres', 
-          fournisseur: res.fields.siret || 'À identifier'
+          fournisseur: nomFournisseur  // ✅ CORRIGÉ
         };
         
-        console.log('[UPLOAD] Facture payload:', payload);
+        console.log('[UPLOAD] Final payload:', payload);
       } else {
         payload = { ...payload, type_frais: 'Autres', montant_total: res.fields.net ?? res.fields.ttc ?? res.fields.ht };
       }

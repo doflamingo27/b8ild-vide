@@ -1,12 +1,12 @@
 import { createWorker, PSM, OEM } from 'tesseract.js';
 
-type OcrOpts = { psm?: PSM; oem?: OEM; lang?: string; };
+type OcrOpts = { psm?: PSM; oem?: OEM; lang?: string; timeout?: number };
 
 async function ocrOnce(image: Blob, opts: OcrOpts): Promise<string> {
-  console.log('[OCR] Starting recognition with PSM:', opts.psm, 'OEM:', opts.oem, 'Lang:', opts.lang);
+  console.log('[OCR] Starting with PSM:', opts.psm, 'OEM:', opts.oem);
   
   try {
-    const worker = await createWorker(opts.lang ?? 'fra', opts.oem ?? OEM.DEFAULT, {
+    const worker = await createWorker(opts.lang ?? 'fra', 1, {
       logger: (m) => {
         if (m.status === 'recognizing text') {
           console.log(`[OCR] Progress: ${Math.round(m.progress * 100)}%`);
@@ -19,54 +19,64 @@ async function ocrOnce(image: Blob, opts: OcrOpts): Promise<string> {
         tessedit_pageseg_mode: opts.psm,
       });
     }
+    if (opts.oem !== undefined) {
+      await worker.setParameters({
+        tessedit_ocr_engine_mode: opts.oem,
+      });
+    }
     
     const { data } = await worker.recognize(image);
     await worker.terminate();
     
-    console.log('[OCR] Recognition done. Text length:', data.text.length, 'Confidence:', data.confidence);
+    console.log('[OCR] Done. Length:', data.text.length, 'Confidence:', data.confidence);
     
     return data.text || '';
   } catch (error: any) {
-    console.error('[OCR] Recognition failed:', error);
+    console.error('[OCR] Failed:', error);
     return '';
   }
 }
 
 export async function multiPassOCR(images: Blob[]): Promise<string[]> {
-  console.log('[OCR] Starting multi-pass OCR for', images.length, 'images');
+  console.log('[OCR] Starting for', images.length, 'images');
   
+  // Passes optimisées pour factures/AO
   const passes: OcrOpts[] = [
-    { psm: PSM.SINGLE_BLOCK, oem: OEM.DEFAULT, lang:'fra' },
-    { psm: PSM.SINGLE_COLUMN, oem: OEM.DEFAULT, lang:'fra' },
-    { psm: PSM.SPARSE_TEXT, oem: OEM.DEFAULT, lang:'fra' },
-    { psm: PSM.AUTO_OSD, oem: OEM.DEFAULT, lang:'fra' },
+    { psm: PSM.AUTO, oem: OEM.LSTM_ONLY, lang: 'fra', timeout: 30000 },        // Auto intelligent
+    { psm: PSM.SINGLE_COLUMN, oem: OEM.LSTM_ONLY, lang: 'fra', timeout: 25000 }, // Colonne (factures)
+    { psm: PSM.SINGLE_BLOCK, oem: OEM.LSTM_ONLY, lang: 'fra', timeout: 20000 },  // Bloc unique
   ];
   
   const results: string[] = [];
   
   for (let imgIndex = 0; imgIndex < images.length; imgIndex++) {
     const img = images[imgIndex];
-    console.log(`[OCR] Processing image ${imgIndex + 1}/${images.length}`);
+    console.log(`[OCR] Processing ${imgIndex + 1}/${images.length}`);
     
     let best = ''; 
     let bestScore = 0;
     
     for (const p of passes) {
       const t = await ocrOnce(img, p);
-      const score = (t.match(/[A-Za-z0-9]/g)?.length ?? 0) / Math.max(1, t.length);
+      const alphanum = (t.match(/[A-Za-z0-9]/g)?.length ?? 0);
+      const score = alphanum / Math.max(1, t.length);
       
-      console.log(`[OCR] Pass PSM:${p.psm} Score:${(score * 100).toFixed(1)}%`);
+      console.log(`[OCR] PSM:${p.psm} -> ${alphanum} chars, score: ${(score * 100).toFixed(1)}%`);
       
       if (score > bestScore) { 
         best = t; 
         bestScore = score; 
       }
       
-      if (bestScore >= 0.7) break;
+      // Early exit à 60% (baissé de 70%)
+      if (bestScore >= 0.6) {
+        console.log('[OCR] Early exit - good quality');
+        break;
+      }
     }
     
     results.push(best);
-    console.log(`[OCR] Best result for image ${imgIndex + 1}: ${best.length} chars, score: ${(bestScore * 100).toFixed(1)}%`);
+    console.log(`[OCR] Best: ${best.length} chars, score: ${(bestScore * 100).toFixed(1)}%`);
   }
   
   return results;

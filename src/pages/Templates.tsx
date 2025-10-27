@@ -43,32 +43,28 @@ const Templates = () => {
 
   if (!entreprise) {
     return (
-      <DashboardLayout>
-        <EmptyState
-          icon={Files}
-          title="Chargement..."
-          text="Chargement de vos templates..."
-        />
-      </DashboardLayout>
+      <EmptyState
+        icon={Files}
+        title="Chargement..."
+        text="Chargement de vos templates..."
+      />
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">{labels.nav.templates}</h1>
-          <p className="text-muted-foreground">
-            Gagnez du temps en créant vos chantiers à partir de templates pré-configurés
-          </p>
-        </div>
-
-        <TemplateManager
-          entrepriseId={entreprise.id}
-          onUseTemplate={handleUseTemplate}
-        />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold mb-2">{labels.nav.templates}</h1>
+        <p className="text-muted-foreground">
+          Gagnez du temps en créant vos chantiers à partir de templates pré-configurés
+        </p>
       </div>
-    </DashboardLayout>
+
+      <TemplateManager
+        entrepriseId={entreprise.id}
+        onUseTemplate={handleUseTemplate}
+      />
+    </div>
   );
 };
 

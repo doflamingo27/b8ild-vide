@@ -14,6 +14,7 @@ export type ExtractionResult = {
     numFacture?: string|null;
     dateDoc?: string|null;
     currency?: 'EUR'|'OTHER'|null;
+    fournisseur?: string|null;
     // AO
     aoDeadline?: string|null;
     aoBudget?: number|null;
