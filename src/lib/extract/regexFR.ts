@@ -19,10 +19,10 @@ export const R = {
   SIREN: /\b\d{3}\s?\d{3}\s?\d{3}\b/gi,
   
   // Numéro de facture plus tolérant
-  NUM_FACT: /(?:facture|n[°o]\.?)\s*[:\-]?\s*([A-Z0-9\-\/]+)/gi,
+  NUM_FACT: /(?:facture|n[°o]\.?|invoice)\s*[:\-]?\s*([A-Z0-9\-\/]+)/gi,
   
   // Date avec plus de formats
-  DATE: /\b([0-3]?\d)[\/\-\.]([01]?\d)[\/\-\.](\d{2,4})\b/g,
+  DATE: /\b([0-3]?\d[\/\-\.][01]?\d[\/\-\.]\d{2,4})\b/g,
   
   EUR: /€|EUR|euro/gi,
   
@@ -31,11 +31,11 @@ export const R = {
   
   AO_CP: /\b(0[1-9]|[1-8]\d|9[0-5])\d{3}\b/g,
   
-  AO_BUDGET: /(?:montant|budget|estimation).*?(?:estim[ée]|prévu)?\s*[:\-]?\s*([0-9\s\.,]+)\s*€?/gi,
+  AO_BUDGET: /(?:montant|budget|estimation).*?([0-9\s\.,]+)\s*€?/gi,
   
-  AO_REF: /(?:réf(?:érence)?|référence|n[°o])\.?\s*[:\-]?\s*([A-Z0-9\-\/]+)/gi,
+  AO_REF: /(?:réf(?:érence)?|n[°o])\.?\s*[:\-]?\s*([A-Z0-9\-\/]+)/gi,
   
-  AO_ORGA: /(?:organisme|acheteur|maître\s+d['']ouvrage|pouvoir\s+adjudicateur|entité\s+contractante)\s*[:\-]?\s*([^\n]+)/gi,
+  AO_ORGA: /(?:organisme|acheteur|maître\s+d['']ouvrage)\s*[:\-]?\s*([^\n]+)/gi,
   
   // Nouveau : Nom du fournisseur (ligne avant SIRET généralement)
   FOURNISSEUR: /(?:société|entreprise|sa|sarl|sas|eurl)\s+([A-Z][A-Za-z\s\-&]+)/gi,

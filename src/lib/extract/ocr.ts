@@ -3,7 +3,17 @@ import { createWorker, PSM, OEM } from 'tesseract.js';
 type OcrOpts = { psm?: PSM; oem?: OEM; lang?: string; timeout?: number };
 
 async function ocrOnce(image: Blob, opts: OcrOpts): Promise<string> {
-  console.log('[OCR] Starting with PSM:', opts.psm, 'OEM:', opts.oem);
+  console.log('[OCR] Starting with PSM:', opts.psm, 'OEM:', opts.oem, 'Timeout:', opts.timeout);
+  
+  const controller = new AbortController();
+  let timeoutId: number | undefined;
+  
+  if (opts.timeout) {
+    timeoutId = window.setTimeout(() => {
+      console.warn('[OCR] Timeout reached, aborting...');
+      controller.abort();
+    }, opts.timeout);
+  }
   
   try {
     const worker = await createWorker(opts.lang ?? 'fra', 1, {
@@ -14,25 +24,27 @@ async function ocrOnce(image: Blob, opts: OcrOpts): Promise<string> {
       }
     });
     
-    if (opts.psm !== undefined) {
-      await worker.setParameters({
-        tessedit_pageseg_mode: opts.psm,
-      });
-    }
-    if (opts.oem !== undefined) {
-      await worker.setParameters({
-        tessedit_ocr_engine_mode: opts.oem,
-      });
-    }
+    await worker.setParameters({
+      tessedit_pageseg_mode: opts.psm ?? PSM.AUTO,
+      tessedit_ocr_engine_mode: opts.oem ?? OEM.LSTM_ONLY,
+    });
     
     const { data } = await worker.recognize(image);
     await worker.terminate();
+    
+    if (timeoutId) clearTimeout(timeoutId);
     
     console.log('[OCR] Done. Length:', data.text.length, 'Confidence:', data.confidence);
     
     return data.text || '';
   } catch (error: any) {
-    console.error('[OCR] Failed:', error);
+    if (timeoutId) clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      console.error('[OCR] Aborted due to timeout');
+    } else {
+      console.error('[OCR] Failed:', error);
+    }
     return '';
   }
 }

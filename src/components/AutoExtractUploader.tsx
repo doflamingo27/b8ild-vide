@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, Loader2, AlertCircle, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import AutoFillRecap from './AutoFillRecap';
+import { supabase } from '@/integrations/supabase/client';
 
 type Props = {
   module: 'ao' | 'factures' | 'frais';
@@ -38,8 +39,51 @@ export default function AutoExtractUploader({ module, entrepriseId, onSaved }: P
       }
       
       console.log('[UPLOAD] Calling extractFromFile...');
-      const res = await extractFromFile(f, entrepriseId);
-      console.log('[UPLOAD] Extraction result:', res);
+      let res = await extractFromFile(f, entrepriseId);
+      console.log('[UPLOAD] Local extraction result:', res);
+      
+      // Fallback AI si confiance trop faible
+      if (res.confidence < 0.30) {
+        console.warn('[UPLOAD] Low confidence, trying AI fallback...');
+        
+        try {
+          // Upload temporaire dans le bucket documents
+          const fileName = `temp/${Date.now()}_${f.name}`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('documents')
+            .upload(fileName, f);
+          
+          if (uploadError) throw uploadError;
+          
+          // Appel edge function
+          const { data: aiData, error: aiError } = await supabase.functions.invoke('extract-document-v3', {
+            body: { 
+              fileUrl: fileName,
+              documentType: module === 'ao' ? 'tender' : 'invoice'
+            }
+          });
+          
+          if (!aiError && aiData?.success) {
+            console.log('[UPLOAD] AI extraction succeeded:', aiData);
+            
+            // Fusionner les résultats (AI prioritaire si confiance > locale)
+            if (aiData.confidence > res.confidence) {
+              res = {
+                ...res,
+                fields: { ...res.fields, ...aiData.data },
+                confidence: Math.max(res.confidence, aiData.confidence),
+                debug: { ...res.debug, ai_fallback: true }
+              };
+            }
+          }
+          
+          // Cleanup
+          await supabase.storage.from('documents').remove([fileName]);
+        } catch (aiErr) {
+          console.error('[UPLOAD] AI fallback failed:', aiErr);
+          // Continuer avec résultat local
+        }
+      }
       
       setExtraction(res);
       

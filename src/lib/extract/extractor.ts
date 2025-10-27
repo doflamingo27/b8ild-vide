@@ -9,20 +9,25 @@ import type { ExtractionResult, DocType } from './types';
 function classifyDoc(text: string): DocType {
   const s = text.toLowerCase();
   
-  // Scoring pour classification plus robuste
   let scoreAO = 0;
   let scoreInvoice = 0;
   
-  if (/appel\s*d['']offres?|ao\s*n[°o]|dce|date\s*limite|acheteur|procédure/i.test(s)) scoreAO += 3;
-  if (/organisme|maître\s*d['']ouvrage|pouvoir\s*adjudicateur/i.test(s)) scoreAO += 2;
-  if (/budget.*estim/i.test(s)) scoreAO += 1;
+  // Plus de patterns pour AO
+  if (/appel\s*d['']offres?|ao\s*n[°o]|dce|date\s*limite|consultation|procédure/i.test(s)) scoreAO += 3;
+  if (/organisme|acheteur|maître\s*d['']ouvrage|pouvoir\s*adjudicateur|collectivité/i.test(s)) scoreAO += 2;
+  if (/budget.*estim|montant\s*prév|enveloppe/i.test(s)) scoreAO += 1;
+  if (/critères?\s*de\s*sélection|offre\s*technique/i.test(s)) scoreAO += 2;
   
-  if (/facture|invoice|n[°o]\s*facture/i.test(s)) scoreInvoice += 3;
-  if (/net\s*à\s*payer|montant\s*ttc/i.test(s)) scoreInvoice += 2;
-  if (/siret|siren|tva/i.test(s)) scoreInvoice += 1;
+  // Plus de patterns pour factures
+  if (/facture|invoice|n[°o]\s*(?:fact|inv)|devis/i.test(s)) scoreInvoice += 3;
+  if (/net\s*à\s*payer|montant\s*ttc|total\s*ttc/i.test(s)) scoreInvoice += 2;
+  if (/siret|siren|tva\s*intra|n[°o]\s*tva/i.test(s)) scoreInvoice += 2;
+  if (/date\s*(?:de\s*)?facture|échéance\s*paiement/i.test(s)) scoreInvoice += 1;
   
-  if (scoreAO > scoreInvoice) return 'ao';
-  if (scoreInvoice > 0) return 'invoice';
+  console.log('[CLASSIFY] Scores - AO:', scoreAO, 'Invoice:', scoreInvoice);
+  
+  if (scoreAO > scoreInvoice && scoreAO >= 3) return 'ao';
+  if (scoreInvoice >= 3) return 'invoice';
   if (/(qte|quantité|prix\s*unitaire|total)/i.test(s)) return 'table';
   
   return 'unknown';
@@ -89,13 +94,13 @@ export async function extractFromFile(file: File, entrepriseId?: string): Promis
   }
   
   const numMatch = allText.match(R.NUM_FACT);
-  if (numMatch?.[2]) {
-    addCandidate(candidatesMap, 'numFacture', numMatch[2].trim(), 'regex', 0.10);
+  if (numMatch?.[1]) {
+    addCandidate(candidatesMap, 'numFacture', numMatch[1].trim(), 'regex', 0.10);
   }
   
   const dateMatches = [...allText.matchAll(R.DATE)];
   if (dateMatches.length > 0) {
-    addCandidate(candidatesMap, 'dateDoc', normalizeDateFR(dateMatches[0][1]), 'regex', 0.10);
+    addCandidate(candidatesMap, 'dateDoc', normalizeDateFR(dateMatches[0][0]), 'regex', 0.10);
   }
   
   const eurMatch = R.EUR.test(allText);
@@ -110,18 +115,18 @@ export async function extractFromFile(file: File, entrepriseId?: string): Promis
   }
   
   const aoBudgetMatch = allText.match(R.AO_BUDGET);
-  if (aoBudgetMatch?.[3]) {
-    addCandidate(candidatesMap, 'aoBudget', normalizeNumberFR(aoBudgetMatch[3]), 'regex', 0.10);
+  if (aoBudgetMatch?.[1]) {
+    addCandidate(candidatesMap, 'aoBudget', normalizeNumberFR(aoBudgetMatch[1]), 'regex', 0.10);
   }
   
   const aoRefMatch = allText.match(R.AO_REF);
-  if (aoRefMatch?.[2]) {
-    addCandidate(candidatesMap, 'aoRef', aoRefMatch[2], 'regex', 0.10);
+  if (aoRefMatch?.[1]) {
+    addCandidate(candidatesMap, 'aoRef', aoRefMatch[1], 'regex', 0.10);
   }
   
   const aoOrgaMatch = allText.match(R.AO_ORGA);
-  if (aoOrgaMatch?.[2]) {
-    addCandidate(candidatesMap, 'aoOrga', aoOrgaMatch[2].trim(), 'regex', 0.10);
+  if (aoOrgaMatch?.[1]) {
+    addCandidate(candidatesMap, 'aoOrga', aoOrgaMatch[1].trim(), 'regex', 0.10);
   }
   
   const aoCPMatches = [...allText.matchAll(R.AO_CP)];

@@ -2,7 +2,6 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import DashboardLayout from '@/components/DashboardLayout';
 import AutoExtractUploader from '@/components/AutoExtractUploader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Receipt } from 'lucide-react';
@@ -18,19 +17,26 @@ export default function ImportFacturePage() {
     enabled: !!user,
   });
 
-  if (!entreprise) return <DashboardLayout><div>Chargement…</div></DashboardLayout>;
+  if (!entreprise) return <div className="flex items-center justify-center min-h-screen"><p>Chargement…</p></div>;
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 max-w-3xl">
-        <div className="flex items-center gap-3">
-          <Receipt className="h-8 w-8 text-primary" />
-          <div><h1 className="text-3xl font-bold">Importer une facture / un frais</h1>
-          <p className="text-muted-foreground">PDF ou image. Extraction 100% automatique.</p></div>
+    <div className="space-y-6 max-w-3xl">
+      <div className="flex items-center gap-3">
+        <Receipt className="h-8 w-8 text-primary" />
+        <div>
+          <h1 className="text-3xl font-bold">Importer une facture / un frais</h1>
+          <p className="text-muted-foreground">PDF ou image. Extraction 100% automatique.</p>
         </div>
-        <Card><CardHeader><CardTitle>Document</CardTitle><CardDescription>Uploadez pour extraction automatique.</CardDescription></CardHeader>
-        <CardContent><AutoExtractUploader module="factures" entrepriseId={entreprise.id} /></CardContent></Card>
       </div>
-    </DashboardLayout>
+      <Card>
+        <CardHeader>
+          <CardTitle>Document</CardTitle>
+          <CardDescription>Uploadez pour extraction automatique.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AutoExtractUploader module="factures" entrepriseId={entreprise.id} />
+        </CardContent>
+      </Card>
+    </div>
   );
 }
