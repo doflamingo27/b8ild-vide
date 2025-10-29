@@ -5,6 +5,7 @@ import { R } from './regexFR';
 import { ocrImageBlob } from './ocrLocal';
 import { choose, Cand } from './vote';
 import { parseCSV, parseXLSX, inferTotals } from './tableDetect';
+import { renderAllPdfPagesToBlobs } from './pdfRender';
 
 export async function extractAuto(file: File, entrepriseId?: string) {
   console.log('[EXTRACT] Starting extraction for:', file.name, 'Type:', file.type, 'Size:', file.size);
@@ -41,11 +42,15 @@ export async function extractAuto(file: File, entrepriseId?: string) {
       layoutPairs = pairsFromLayout(pages);
       textPages = pages.map(pageItems => pageItems.map(i => i.str).join(' '));
     } else {
-      console.log('[EXTRACT] PDF has no text, using OCR');
-      // PDF sans texte → OCR sur le fichier
-      const blob = new Blob([await file.arrayBuffer()], { type: file.type });
-      const t = await ocrImageBlob(blob);
-      textPages = [t];
+      console.log('[EXTRACT] PDF has no text, rendering pages for OCR');
+      
+      // ✅ Rendre chaque page en image, puis OCR
+      const pageBlobs = await renderAllPdfPagesToBlobs(file);
+      
+      for (const blob of pageBlobs) {
+        const t = await ocrImageBlob(blob);
+        textPages.push(t);
+      }
     }
   } else {
     // 3) Image → OCR
@@ -173,12 +178,16 @@ export async function extractAuto(file: File, entrepriseId?: string) {
     console.log('[EXTRACT] Calculated HT from TTC:', fields.ht);
   }
 
+  const hasAnyAmount = !!(fields.ht || fields.ttc || fields.net || fields.tvaAmt);
   const totalsOk = checkTotals(fields.ht, fields.tvaPct, fields.tvaAmt, fields.net ?? fields.ttc);
-  const confidence = scoreConfidence(0.5, {
+  
+  const confidence = scoreConfidence(0.3, {  // ✅ Base 0.3 (au lieu de 0.5)
     totalsOk,
     siret: !!fields.siret,
     date: !!(fields.dateDoc || fields.aoDeadline),
     eur,
+    hasAnyAmount,         // ✅ NOUVEAU
+    hasFournisseur: !!fields.fournisseur,  // ✅ NOUVEAU
   });
 
   console.log('[EXTRACT] Confidence:', (confidence * 100).toFixed(1) + '%', 'Totals OK:', totalsOk);

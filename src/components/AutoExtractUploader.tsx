@@ -69,8 +69,9 @@ export default function AutoExtractUploader({ module, entrepriseId, onSaved }: P
           siret: res.fields.siret
         });
         
+        // ✅ CORRECTION : Ne plus bloquer si pas de montants, juste logger un warning
         if (!montant_ttc && !montant_ht) {
-          throw new Error('Impossible d\'extraire les montants. Document illisible ou format non supporté.');
+          console.warn('[UPLOAD] No amounts extracted - low quality document');
         }
         
         payload = { 
@@ -97,12 +98,22 @@ export default function AutoExtractUploader({ module, entrepriseId, onSaved }: P
       setSavedId(id);
       
       const confidencePct = Math.round(res.confidence * 100);
-      if (res.confidence >= 0.80) {
-        toast({ title: "Extraction terminée — c'est prêt.", description: `Confiance : ${confidencePct}%` });
+      const montant_ttc = res.fields.net ?? res.fields.ttc ?? null;
+      const montant_ht = res.fields.ht ?? null;
+      
+      // ✅ Toast adapté selon la présence de montants
+      if (!montant_ttc && !montant_ht && module === 'factures') {
+        toast({ 
+          title: "⚠️ Extraction incomplète", 
+          description: "Aucun montant détecté. Vérifiez le document ou saisissez manuellement.",
+          variant: "destructive"
+        });
+      } else if (res.confidence >= 0.80) {
+        toast({ title: "✅ Extraction terminée — c'est prêt.", description: `Confiance : ${confidencePct}%` });
       } else if (res.confidence >= 0.60) {
-        toast({ title: "Extraction terminée — vérifiez rapidement.", description: `Confiance : ${confidencePct}%` });
+        toast({ title: "⚠️ Extraction terminée — vérifiez rapidement.", description: `Confiance : ${confidencePct}%` });
       } else {
-        toast({ title: "Extraction terminée — qualité faible.", description: `Confiance : ${confidencePct}%` });
+        toast({ title: "⚠️ Extraction terminée — qualité faible.", description: `Confiance : ${confidencePct}%` });
       }
       
       onSaved?.(id);

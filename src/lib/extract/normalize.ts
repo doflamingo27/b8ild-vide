@@ -62,11 +62,17 @@ export function scoreConfidence(base: number, flags: {
   siret?: boolean;
   date?: boolean;
   eur?: boolean;
+  hasAnyAmount?: boolean;  // ✅ NOUVEAU
+  hasFournisseur?: boolean; // ✅ NOUVEAU
 }): number {
   let s = base;
-  if (flags.totalsOk) s += 0.25;
-  if (flags.siret) s += 0.10;
-  if (flags.date) s += 0.10;
-  if (flags.eur) s += 0.10;
+  
+  if (flags.totalsOk) s += 0.25;           // Cohérence HT/TVA/TTC
+  if (flags.siret) s += 0.10;              // SIRET trouvé
+  if (flags.date) s += 0.10;               // Date trouvée
+  if (flags.eur) s += 0.05;                // Symbole € présent
+  if (flags.hasAnyAmount) s += 0.15;       // ✅ Au moins 1 montant
+  if (flags.hasFournisseur) s += 0.05;     // ✅ Nom fournisseur
+  
   return Math.min(1, Math.max(0, s));
 }
