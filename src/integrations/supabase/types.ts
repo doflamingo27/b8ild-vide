@@ -375,6 +375,7 @@ export type Database = {
           fournisseur: string | null
           id: string
           montant_ht: number
+          montant_ttc: number | null
           pages_count: number | null
           siret: string | null
           tva_montant: number | null
@@ -394,6 +395,7 @@ export type Database = {
           fournisseur?: string | null
           id?: string
           montant_ht?: number
+          montant_ttc?: number | null
           pages_count?: number | null
           siret?: string | null
           tva_montant?: number | null
@@ -413,6 +415,7 @@ export type Database = {
           fournisseur?: string | null
           id?: string
           montant_ht?: number
+          montant_ttc?: number | null
           pages_count?: number | null
           siret?: string | null
           tva_montant?: number | null
@@ -1123,6 +1126,8 @@ export type Database = {
         Returns: string
       }
       jwt_role: { Args: never; Returns: string }
+      safe_num_fr: { Args: { p_max?: number; p_text: string }; Returns: number }
+      safe_pct_fr: { Args: { p_text: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "chef" | "ouvrier"

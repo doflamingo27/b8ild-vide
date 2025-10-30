@@ -1,14 +1,44 @@
-export function normalizeNumberFR(raw: string | null | undefined): number | null {
+export function normalizeNumberFR(raw?: string | null): number | null {
   if (!raw) return null;
-  const s = raw
-    .replace(/\u00A0/g, ' ')
+  let s = String(raw)
+    .replace(/\u00A0/g, ' ')   // espace insécable
     .replace(/€/g, '')
-    .replace(/[^\d,.\- ]/g, '')
-    .replace(/\s+/g, '')
-    .replace(/\.(?=\d{3}\b)/g, '')     // points milliers
-    .replace(/,(?=\d{1,2}\b)/g, '.');  // virgule décimale
+    .trim();
+
+  // supprimer tous espaces
+  s = s.replace(/\s+/g, '');
+
+  // Si contient à la fois . et , on suppose . = milliers, , = décimale
+  if (s.includes('.') && s.includes(',')) {
+    s = s.replace(/\./g, '').replace(/,/, '.');
+  } else {
+    // Si seule virgule et 1–2 décimales: remplacer virgule par point
+    s = s.replace(/,(?=\d{1,2}$)/, '.');
+    // Sinon supprimer points-milliers
+    s = s.replace(/\.(?=\d{3}\b)/g, '');
+  }
+
+  // garder chiffres, signe, point
+  s = s.replace(/[^0-9\.\-]/g, '');
+  if (!s || s === '-' || s === '.' || s === '-.') return null;
+
   const n = Number(s);
-  return Number.isFinite(n) ? n : null;
+  if (!Number.isFinite(n)) return null;
+
+  // bornes sûres
+  if (Math.abs(n) > 999999999999.99) return null;
+  return Math.round(n * 100) / 100;
+}
+
+export function normalizePercentFR(raw?: string | null): number | null {
+  if (!raw) return null;
+  const n = normalizeNumberFR(raw);
+  if (n == null) return null;
+  // si <1, considérer que c'était un ratio → ramener en %
+  const pct = n < 1 ? n * 100 : n;
+  if (pct < 0) return 0;
+  if (pct > 100) return 100;
+  return Math.round(pct * 100) / 100;
 }
 
 export function normalizeDateFR(raw: string | null | undefined): string | null {
@@ -47,12 +77,16 @@ export function normalizeDateFR(raw: string | null | undefined): string | null {
 }
 
 export function checkTotals(ht?: number | null, tvaPct?: number | null, tvaAmt?: number | null, ttc?: number | null): boolean {
-  if (ht != null && ttc != null && tvaPct != null) {
-    const expected = ht * (1 + tvaPct / 100);
-    return Math.abs((ttc - expected) / expected) <= 0.02;
-  } else if (ht != null && tvaAmt != null && ttc != null) {
-    const expected = ht + tvaAmt;
-    return Math.abs((ttc - expected) / expected) <= 0.02;
+  // tolérance 2 %
+  if (ht != null && ttc != null) {
+    if (tvaPct != null) {
+      const expected = ht * (1 + tvaPct / 100);
+      return Math.abs((ttc - expected) / Math.max(1, expected)) <= 0.02;
+    }
+    if (tvaAmt != null) {
+      const expected = ht + tvaAmt;
+      return Math.abs((ttc - expected) / Math.max(1, expected)) <= 0.02;
+    }
   }
   return false;
 }

@@ -56,36 +56,74 @@ export default function AutoExtractUploader({ module, entrepriseId, chantierId, 
       } else if (module === 'factures') {
         table = 'factures_fournisseurs';
         
-        const montant_ttc = res.fields.net ?? res.fields.ttc ?? null;
-        const montant_ht = res.fields.ht ?? null;
+        let montant_ttc = res.fields.net ?? res.fields.ttc ?? null;
+        let montant_ht = res.fields.ht ?? null;
+        let tva_pct = res.fields.tvaPct ?? null;
+        let tva_montant = res.fields.tvaAmt ?? null;
         
-        // ✅ CORRECTION : Utiliser le nom du fournisseur, pas le SIRET
+        // ✅ SANITY RULES (avant RPC)
+        
+        // 1) Borner les montants (éviter overflow)
+        const MAX_AMOUNT = 999999999999.99;
+        if (montant_ht && Math.abs(montant_ht) > MAX_AMOUNT) {
+          console.warn('[UPLOAD] montant_ht trop grand, mis à NULL:', montant_ht);
+          montant_ht = null;
+        }
+        if (montant_ttc && Math.abs(montant_ttc) > MAX_AMOUNT) {
+          console.warn('[UPLOAD] montant_ttc trop grand, mis à NULL:', montant_ttc);
+          montant_ttc = null;
+        }
+        if (tva_montant && Math.abs(tva_montant) > MAX_AMOUNT) {
+          console.warn('[UPLOAD] tva_montant trop grand, mis à NULL:', tva_montant);
+          tva_montant = null;
+        }
+        
+        // 2) Borner TVA %
+        if (tva_pct != null) {
+          if (tva_pct > 100) {
+            console.warn('[UPLOAD] TVA% > 100, ramené à 100:', tva_pct);
+            tva_pct = 100;
+          }
+          if (tva_pct < 0) {
+            console.warn('[UPLOAD] TVA% < 0, ramené à 0:', tva_pct);
+            tva_pct = 0;
+          }
+        }
+        
+        // 3) Swap TTC/HT si incohérence (TTC < HT)
+        if (montant_ht && montant_ttc && tva_pct != null) {
+          if (montant_ttc < montant_ht) {
+            console.warn('[UPLOAD] TTC < HT, probable inversion, swap:', { montant_ht, montant_ttc });
+            [montant_ht, montant_ttc] = [montant_ttc, montant_ht];
+          }
+        }
+        
         const nomFournisseur = res.fields.fournisseur || res.fields.siret || 'Fournisseur inconnu';
         
-        console.log('[UPLOAD] Facture extraction:', {
+        console.log('[UPLOAD] Facture extraction après sanity:', {
           montant_ht,
           montant_ttc,
-          tva_pct: res.fields.tvaPct,
+          tva_pct,
+          tva_montant,
           fournisseur: nomFournisseur,
           siret: res.fields.siret
         });
         
-        // ✅ CORRECTION : Ne plus bloquer si pas de montants, juste logger un warning
         if (!montant_ttc && !montant_ht) {
           console.warn('[UPLOAD] No amounts extracted - low quality document');
         }
         
         payload = { 
           ...payload,
-          chantier_id: chantierId || null,  // Utiliser la prop si fournie, sinon NULL
+          chantier_id: chantierId || null,
           montant_ht: montant_ht, 
           montant_ttc: montant_ttc,
-          tva_pct: res.fields.tvaPct, 
-          tva_montant: res.fields.tvaAmt,
+          tva_pct: tva_pct, 
+          tva_montant: tva_montant,
           siret: res.fields.siret, 
           date_facture: res.fields.dateDoc, 
           categorie: 'Autres', 
-          fournisseur: nomFournisseur  // ✅ CORRIGÉ
+          fournisseur: nomFournisseur
         };
         
         console.log('[UPLOAD] Final payload:', payload);

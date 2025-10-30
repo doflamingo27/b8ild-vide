@@ -1,6 +1,6 @@
 import { readPdfWithCoords } from './pdfTextCoords';
 import { pairsFromLayout } from './layoutPairs';
-import { normalizeNumberFR, normalizeDateFR, checkTotals, scoreConfidence } from './normalize';
+import { normalizeNumberFR, normalizePercentFR, normalizeDateFR, checkTotals, scoreConfidence } from './normalize';
 import { R } from './regexFR';
 import { ocrImageBlob } from './ocrLocal';
 import { choose, Cand } from './vote';
@@ -82,7 +82,7 @@ export async function extractAuto(file: File, entrepriseId?: string) {
   if (netMatch?.[1]) push('net', normalizeNumberFR(netMatch[1]), 0.75);
   
   const tvaPctMatch = R.TVA_PCT.exec(all);
-  if (tvaPctMatch?.[1]) push('tvaPct', normalizeNumberFR(tvaPctMatch[1]));
+  if (tvaPctMatch?.[1]) push('tvaPct', normalizePercentFR(tvaPctMatch[1]));
   
   const tvaAmtMatch = R.TVA_AMT.exec(all);
   if (tvaAmtMatch?.[1]) push('tvaAmt', normalizeNumberFR(tvaAmtMatch[1]));
@@ -218,7 +218,10 @@ function mapLabelToField(lbl: string): string | null {
 }
 
 function valueNormalizeForKey(key: string, raw: string): any {
-  if (['ht', 'tvaPct', 'tvaAmt', 'ttc', 'net', 'aoBudget'].includes(key)) {
+  if (key === 'tvaPct') {
+    return normalizePercentFR(raw.replace('€', ''));
+  }
+  if (['ht', 'tvaAmt', 'ttc', 'net', 'aoBudget'].includes(key)) {
     return normalizeNumberFR(raw.replace('€', ''));
   }
   if (['dateDoc', 'aoDeadline'].includes(key)) {
