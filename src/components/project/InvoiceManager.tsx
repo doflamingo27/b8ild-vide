@@ -140,19 +140,36 @@ const InvoiceManager = ({ chantierId, factures, onUpdate }: InvoiceManagerProps)
 
       // Upload du fichier
       if (file) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${entreprise.id}/factures/${Date.now()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('factures')
-          .upload(fileName, file);
+        try {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${entreprise.id}/factures/${Date.now()}.${fileExt}`;
+          
+          console.log('[InvoiceManager] Uploading file:', fileName);
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('factures')
+            .upload(fileName, file);
 
-        if (uploadError) throw uploadError;
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('factures')
-          .getPublicUrl(fileName);
-        
-        fichier_url = publicUrl;
+          if (uploadError) {
+            console.error('[InvoiceManager] Upload error:', uploadError);
+            throw new Error(`Échec d'upload: ${uploadError.message}`);
+          }
+          
+          const { data: { publicUrl } } = supabase.storage
+            .from('factures')
+            .getPublicUrl(fileName);
+          
+          fichier_url = publicUrl;
+          console.log('[InvoiceManager] File uploaded:', publicUrl);
+        } catch (uploadErr: any) {
+          // Continuer sans fichier mais avertir l'utilisateur
+          console.warn('[InvoiceManager] Could not upload file:', uploadErr);
+          toast({
+            title: "⚠️ Avertissement",
+            description: "La facture sera enregistrée sans fichier attaché",
+            variant: "default",
+          });
+        }
       }
 
       // Insertion DIRECTE dans la table (les triggers vont recalculer automatiquement)

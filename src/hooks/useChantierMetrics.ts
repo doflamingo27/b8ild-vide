@@ -32,7 +32,7 @@ export function useChantierMetrics(chantierId: string) {
       setLoading(true);
       setError(null);
 
-      console.log('[useChantierMetrics] 🔍 Fetching metrics for:', chantierId);
+      console.log('[useChantierMetrics] 🔍 Fetching for:', chantierId);
 
       // 1. Essayer de récupérer depuis chantier_metrics_realtime
       const { data, error: fetchError } = await supabase
@@ -48,8 +48,8 @@ export function useChantierMetrics(chantierId: string) {
         console.log('[useChantierMetrics] ✅ Metrics found:', data.metrics);
         setMetrics(data.metrics as unknown as ChantierMetrics);
       } else {
-        // 2. Pas de métriques → les calculer via RPC
-        console.log('[useChantierMetrics] 🔄 No metrics found, computing...');
+        // 2. Pas de métriques → les calculer ET les stocker
+        console.log('[useChantierMetrics] 🔄 No metrics, computing...');
         const { data: calcData, error: calcError } = await supabase
           .rpc('compute_chantier_metrics', { p_chantier: chantierId });
 
@@ -60,7 +60,7 @@ export function useChantierMetrics(chantierId: string) {
           console.log('[useChantierMetrics] ✅ Computed metrics:', calcData);
           setMetrics(calcData as unknown as ChantierMetrics);
           
-          // 3. Les stocker pour le Realtime
+          // 3. Les stocker pour le Realtime (upsert pour éviter les doublons)
           const { error: upsertError } = await supabase
             .from('chantier_metrics_realtime')
             .upsert({
@@ -71,6 +71,8 @@ export function useChantierMetrics(chantierId: string) {
 
           if (upsertError) {
             console.error('[useChantierMetrics] ⚠️ Error upserting:', upsertError);
+          } else {
+            console.log('[useChantierMetrics] ✅ Metrics stored for realtime');
           }
         }
       }
