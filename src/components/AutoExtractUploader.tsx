@@ -40,14 +40,27 @@ export default function AutoExtractUploader({ module, entrepriseId, chantierId, 
 
       // 2️⃣ Parser français
       const fields = parseFrenchDocument(text, module);
+      
+      // Debug: Afficher texte OCR brut (500 premiers caractères)
+      console.log('[Parser] Raw OCR text (first 500 chars):', text.substring(0, 500));
+      
       console.log('[Parser] Extracted fields:', {
         fournisseur: fields.fournisseur,
         montant_ht: fields.ht,
         montant_ttc: fields.ttc ?? fields.net,
         tva_pct: fields.tvaPct,
+        tva_montant: fields.tvaAmt,
         siret: fields.siret,
         date: fields.dateDoc
       });
+      
+      // Alertes si extraction incomplète
+      if (!fields.ht && !fields.ttc && !fields.net) {
+        console.warn('[Parser] ⚠️ Aucun montant détecté ! Vérifier les regex.');
+      }
+      if (!fields.fournisseur) {
+        console.warn('[Parser] ⚠️ Fournisseur non détecté !');
+      }
 
       // 3️⃣ Calcul confiance finale
       let finalConfidence = ocrConfidence;

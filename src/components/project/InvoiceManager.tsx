@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, FileText, Loader2 } from "lucide-react";
+import { Plus, Trash2, FileText, Loader2, Edit, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { labels, toasts } from "@/lib/content";
 import AutoExtractUploader from "@/components/AutoExtractUploader";
@@ -32,6 +34,11 @@ const InvoiceManager = ({ chantierId, factures, onUpdate }: InvoiceManagerProps)
     categorie: "Matériaux",
     date_facture: new Date().toISOString().split('T')[0],
   });
+  
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [editData, setEditData] = useState<any>(null);
+  const [selectedFacture, setSelectedFacture] = useState<any>(null);
 
   // Récupérer entrepriseId pour AutoExtractUploader
   const { data: entreprise } = useQuery({
@@ -179,6 +186,59 @@ const InvoiceManager = ({ chantierId, factures, onUpdate }: InvoiceManagerProps)
     }
   };
 
+  const handleEdit = (facture: any) => {
+    setEditData({
+      id: facture.id,
+      fournisseur: facture.fournisseur || "",
+      montant_ht: facture.montant_ht || 0,
+      tva_pct: facture.tva_pct || 20,
+      montant_ttc: facture.montant_ttc || 0,
+      siret: facture.siret || "",
+      categorie: facture.categorie || "Autres",
+      date_facture: facture.date_facture || new Date().toISOString().split('T')[0],
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editData) return;
+
+    try {
+      const { error } = await supabase
+        .from('factures_fournisseurs')
+        .update({
+          fournisseur: editData.fournisseur,
+          montant_ht: editData.montant_ht,
+          tva_pct: editData.tva_pct,
+          montant_ttc: editData.montant_ttc,
+          siret: editData.siret,
+          categorie: editData.categorie,
+          date_facture: editData.date_facture,
+          extraction_status: 'complete',
+        })
+        .eq('id', editData.id);
+
+      if (error) throw error;
+
+      toast({ title: "✅ Facture mise à jour" });
+      setEditDialogOpen(false);
+      setEditData(null);
+      onUpdate();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleViewDetails = (facture: any) => {
+    setSelectedFacture(facture);
+    setDetailsDialogOpen(true);
+  };
+
   const totalFactures = factures.reduce((sum, f) => sum + Number(f.montant_ht), 0);
 
   return (
@@ -318,41 +378,94 @@ const InvoiceManager = ({ chantierId, factures, onUpdate }: InvoiceManagerProps)
                   <TableHead>Fournisseur</TableHead>
                   <TableHead>Catégorie</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Montant HT</TableHead>
+                  <TableHead className="text-right">HT</TableHead>
+                  <TableHead className="text-right">TVA</TableHead>
+                  <TableHead className="text-right">TTC</TableHead>
+                  <TableHead>Statut</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {factures.map((facture) => (
-                  <TableRow key={facture.id}>
-                    <TableCell className="font-medium">{facture.fournisseur}</TableCell>
-                    <TableCell>{facture.categorie}</TableCell>
-                    <TableCell>{new Date(facture.date_facture).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right font-mono">
-                      {Number(facture.montant_ht).toLocaleString()} €
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        {facture.fichier_url && (
-                          <Button variant="ghost" size="sm" asChild aria-label={labels.actions.viewDetails} title={labels.actions.viewDetails}>
-                            <a href={facture.fichier_url} target="_blank" rel="noopener noreferrer">
-                              <FileText className="h-4 w-4" aria-hidden="true" />
-                            </a>
-                          </Button>
+                {factures.map((facture) => {
+                  const montantHT = facture.montant_ht ? Number(facture.montant_ht) : 0;
+                  const montantTTC = facture.montant_ttc ? Number(facture.montant_ttc) : 0;
+                  const tvaPct = facture.tva_pct ? Number(facture.tva_pct) : 0;
+                  const tvaMontant = facture.tva_montant ? Number(facture.tva_montant) : 0;
+                  
+                  return (
+                    <TableRow key={facture.id}>
+                      <TableCell className="font-medium">{facture.fournisseur}</TableCell>
+                      <TableCell>{facture.categorie}</TableCell>
+                      <TableCell>{new Date(facture.date_facture).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {montantHT > 0 ? `${montantHT.toFixed(2)} €` : '-'}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm">
+                        {tvaPct > 0 && (
+                          <div>
+                            <div>{tvaPct.toFixed(1)}%</div>
+                            {tvaMontant > 0 && (
+                              <div className="text-muted-foreground">{tvaMontant.toFixed(2)} €</div>
+                            )}
+                          </div>
                         )}
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => setDeleteTarget(facture.id)}
-                          aria-label={labels.actions.delete}
-                          title={labels.actions.delete}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        {tvaPct === 0 && '-'}
+                      </TableCell>
+                      <TableCell className="text-right font-mono font-semibold">
+                        {montantTTC > 0 ? `${montantTTC.toFixed(2)} €` : '-'}
+                      </TableCell>
+                      <TableCell>
+                        {facture.extraction_status === 'complete' && (
+                          <Badge variant="default" className="bg-green-500">Complète</Badge>
+                        )}
+                        {facture.extraction_status === 'incomplete' && (
+                          <Badge variant="secondary">Incomplète</Badge>
+                        )}
+                        {!facture.extraction_status && (
+                          <Badge variant="outline">Manuelle</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleViewDetails(facture)}
+                            aria-label="Voir détails"
+                            title="Voir détails"
+                          >
+                            <Info className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleEdit(facture)}
+                            aria-label="Modifier"
+                            title="Modifier"
+                          >
+                            <Edit className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                          {facture.fichier_url && (
+                            <Button variant="ghost" size="sm" asChild aria-label="Voir fichier" title="Voir fichier">
+                              <a href={facture.fichier_url} target="_blank" rel="noopener noreferrer">
+                                <FileText className="h-4 w-4" aria-hidden="true" />
+                              </a>
+                            </Button>
+                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => setDeleteTarget(facture.id)}
+                            aria-label={labels.actions.delete}
+                            title={labels.actions.delete}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           ) : (
@@ -369,6 +482,208 @@ const InvoiceManager = ({ chantierId, factures, onUpdate }: InvoiceManagerProps)
         onConfirm={handleDeleteConfirmed}
         variant="delete"
       />
+
+      {/* Dialog d'édition */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Modifier la facture</DialogTitle>
+            <DialogDescription>Corriger les données extraites automatiquement</DialogDescription>
+          </DialogHeader>
+          {editData && (
+            <form onSubmit={handleUpdateSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-fournisseur">Fournisseur</Label>
+                  <Input
+                    id="edit-fournisseur"
+                    value={editData.fournisseur}
+                    onChange={(e) => setEditData({ ...editData, fournisseur: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-siret">SIRET</Label>
+                  <Input
+                    id="edit-siret"
+                    value={editData.siret}
+                    onChange={(e) => setEditData({ ...editData, siret: e.target.value })}
+                    placeholder="123 456 789 00012"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-montant-ht">Montant HT (€)</Label>
+                  <Input
+                    id="edit-montant-ht"
+                    type="number"
+                    step="0.01"
+                    value={editData.montant_ht}
+                    onChange={(e) => setEditData({ ...editData, montant_ht: parseFloat(e.target.value) || 0 })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-tva-pct">TVA (%)</Label>
+                  <Input
+                    id="edit-tva-pct"
+                    type="number"
+                    step="0.01"
+                    value={editData.tva_pct}
+                    onChange={(e) => setEditData({ ...editData, tva_pct: parseFloat(e.target.value) || 0 })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-montant-ttc">Montant TTC (€)</Label>
+                  <Input
+                    id="edit-montant-ttc"
+                    type="number"
+                    step="0.01"
+                    value={editData.montant_ttc}
+                    onChange={(e) => setEditData({ ...editData, montant_ttc: parseFloat(e.target.value) || 0 })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-categorie">Catégorie</Label>
+                  <Select
+                    value={editData.categorie}
+                    onValueChange={(value) => setEditData({ ...editData, categorie: value })}
+                  >
+                    <SelectTrigger id="edit-categorie">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-date">Date</Label>
+                  <Input
+                    id="edit-date"
+                    type="date"
+                    value={editData.date_facture}
+                    onChange={(e) => setEditData({ ...editData, date_facture: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                  Annuler
+                </Button>
+                <Button type="submit">Enregistrer</Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de détails */}
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Détails de la facture</DialogTitle>
+          </DialogHeader>
+          {selectedFacture && (
+            <div className="space-y-6">
+              {/* Informations principales */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Fournisseur</Label>
+                  <p className="font-medium text-lg">{selectedFacture.fournisseur || 'Non renseigné'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">SIRET</Label>
+                  <p className="font-mono">{selectedFacture.siret || 'Non renseigné'}</p>
+                </div>
+              </div>
+
+              {/* Montants */}
+              <div className="border rounded-lg p-4 bg-muted/30">
+                <Label className="text-sm font-semibold mb-3 block">Montants</Label>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Montant HT</p>
+                    <p className="font-mono text-lg">
+                      {selectedFacture.montant_ht ? `${Number(selectedFacture.montant_ht).toFixed(2)} €` : '-'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      TVA {selectedFacture.tva_pct ? `(${Number(selectedFacture.tva_pct).toFixed(1)}%)` : ''}
+                    </p>
+                    <p className="font-mono text-lg">
+                      {selectedFacture.tva_montant ? `${Number(selectedFacture.tva_montant).toFixed(2)} €` : '-'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Montant TTC</p>
+                    <p className="font-mono font-bold text-lg">
+                      {selectedFacture.montant_ttc ? `${Number(selectedFacture.montant_ttc).toFixed(2)} €` : '-'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Métadonnées */}
+              <div className="border-t pt-4">
+                <Label className="text-sm font-semibold mb-3 block">Informations d'extraction</Label>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Confiance</p>
+                    <p className="font-medium">
+                      {selectedFacture.confiance 
+                        ? `${(Number(selectedFacture.confiance) * 100).toFixed(0)}%` 
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Pages</p>
+                    <p className="font-medium">{selectedFacture.pages_count || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Statut</p>
+                    {selectedFacture.extraction_status === 'complete' && (
+                      <Badge variant="default" className="bg-green-500">Complète</Badge>
+                    )}
+                    {selectedFacture.extraction_status === 'incomplete' && (
+                      <Badge variant="secondary">Incomplète</Badge>
+                    )}
+                    {!selectedFacture.extraction_status && (
+                      <Badge variant="outline">Manuelle</Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* JSON brut */}
+              {selectedFacture.extraction_json && (
+                <Collapsible>
+                  <CollapsibleTrigger className="text-sm text-muted-foreground hover:text-foreground underline">
+                    Voir les données brutes (JSON)
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <pre className="bg-muted p-4 rounded-lg overflow-auto max-h-64 text-xs mt-2">
+                      {JSON.stringify(selectedFacture.extraction_json, null, 2)}
+                    </pre>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
