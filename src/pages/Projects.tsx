@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Building } from "lucide-react";
@@ -25,6 +26,10 @@ const Projects = () => {
     adresse: "",
     duree_estimee: 30,
     description: "",
+    etat_chantier: "brouillon",
+    date_debut_prevue: new Date().toISOString().split('T')[0],
+    date_fin_estimee: "",
+    date_fin_reelle: "",
   });
 
   useEffect(() => {
@@ -95,6 +100,10 @@ const Projects = () => {
         adresse: "",
         duree_estimee: 30,
         description: "",
+        etat_chantier: "brouillon",
+        date_debut_prevue: new Date().toISOString().split('T')[0],
+        date_fin_estimee: "",
+        date_fin_reelle: "",
       });
       loadProjects();
     } catch (error: any) {
@@ -197,6 +206,50 @@ const Projects = () => {
                     aria-label={labels.forms.projectDescription}
                   />
                 </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="etat_chantier" className="font-semibold">État du chantier *</Label>
+                  <Select
+                    value={formData.etat_chantier}
+                    onValueChange={(value) => setFormData({ ...formData, etat_chantier: value })}
+                  >
+                    <SelectTrigger id="etat_chantier">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="brouillon">📝 Brouillon</SelectItem>
+                      <SelectItem value="projection">🔮 Projection</SelectItem>
+                      <SelectItem value="attente_signature">✍️ En attente de signature</SelectItem>
+                      <SelectItem value="en_cours">🚧 En cours</SelectItem>
+                      <SelectItem value="suspendu">⏸️ Suspendu</SelectItem>
+                      <SelectItem value="termine">✅ Terminé</SelectItem>
+                      <SelectItem value="annule">❌ Annulé</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="date_debut_prevue" className="font-semibold">Date de début prévue</Label>
+                    <Input
+                      id="date_debut_prevue"
+                      type="date"
+                      value={formData.date_debut_prevue}
+                      onChange={(e) => setFormData({ ...formData, date_debut_prevue: e.target.value })}
+                      aria-label="Date de début prévue"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="date_fin_estimee" className="font-semibold">Date de fin estimée</Label>
+                    <Input
+                      id="date_fin_estimee"
+                      type="date"
+                      value={formData.date_fin_estimee}
+                      onChange={(e) => setFormData({ ...formData, date_fin_estimee: e.target.value })}
+                      aria-label="Date de fin estimée"
+                    />
+                  </div>
+                </div>
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={loading} size="lg" className="font-bold">
@@ -245,6 +298,7 @@ const Projects = () => {
               client={project.client}
               rentabilite={0}
               jours_restants={project.duree_estimee}
+              etat_chantier={project.etat_chantier}
             />
           ))}
         </div>

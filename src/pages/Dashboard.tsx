@@ -83,8 +83,8 @@ const Dashboard = () => {
           const budgetDisponible = (devis?.montant_ttc || 0) - coutsFixes;
           const rentabilite = devis?.montant_ttc > 0 ? (budgetDisponible / devis.montant_ttc) * 100 : 0;
 
-          const jours_effectifs = project.date_debut 
-            ? Math.max(0, Math.floor((new Date().getTime() - new Date(project.date_debut).getTime()) / (1000 * 60 * 60 * 24)))
+          const jours_effectifs = project.date_debut_prevue 
+            ? Math.max(0, Math.floor((new Date().getTime() - new Date(project.date_debut_prevue).getTime()) / (1000 * 60 * 60 * 24)))
             : 0;
           
           return { ...project, rentabilite, jours_restants: 30 }; // TODO: recalculate with real budget
@@ -150,7 +150,7 @@ const Dashboard = () => {
       </div>
 
       {/* Actions rapides */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-1">
         <Card className="hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => navigate("/import/facture")}>
           <CardHeader className="flex flex-row items-center gap-4">
             <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
@@ -159,18 +159,6 @@ const Dashboard = () => {
             <div>
               <CardTitle className="text-xl">Importer une facture</CardTitle>
               <CardDescription>Extraction automatique 100% des données</CardDescription>
-            </div>
-          </CardHeader>
-        </Card>
-        
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => navigate("/import/ao")}>
-          <CardHeader className="flex flex-row items-center gap-4">
-            <div className="p-3 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors">
-              <FileText className="h-8 w-8 text-accent" />
-            </div>
-            <div>
-              <CardTitle className="text-xl">Importer un AO</CardTitle>
-              <CardDescription>Analyse automatique des appels d'offres</CardDescription>
             </div>
           </CardHeader>
         </Card>

@@ -16,7 +16,8 @@ function extractAmountsWithContext(text: string) {
   
   if (amounts.length === 0) return {};
   
-  const htIndex = text.search(/total\s*h\.?t\.?/i);
+  // Amélioration : détecter HT dans formats tabulaires et variantes
+  const htIndex = text.search(/total\s*h\.?t\.?|total\s+hors\s+taxes?|base\s*h\.?t\.?|montant\s*h\.?t\.?/i);
   const ttcIndex = text.search(/total\s*t\.?t\.?c\.?/i);
   const tvaAmtIndex = text.search(/t\.?v\.?a\.?\s*(?:à|a)?\s*\d{1,2}\s*%/i);
   

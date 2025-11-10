@@ -103,8 +103,8 @@ const Reports = () => {
             const budget_disponible = budget_devis - coutsFixes;
             const rentabilite_pct = budget_devis > 0 ? (budget_disponible / budget_devis) * 100 : 0;
             const jour_critique = cout_journalier_equipe > 0 ? budget_disponible / cout_journalier_equipe : Infinity;
-            const jours_effectifs = chantier.date_debut 
-              ? Math.max(0, Math.floor((new Date().getTime() - new Date(chantier.date_debut).getTime()) / (1000 * 60 * 60 * 24)))
+            const jours_effectifs = chantier.date_debut_prevue 
+              ? Math.max(0, Math.floor((new Date().getTime() - new Date(chantier.date_debut_prevue).getTime()) / (1000 * 60 * 60 * 24)))
               : 0;
             const jours_restants_avant_deficit = Math.max(0, Math.floor(jour_critique - jours_effectifs));
             

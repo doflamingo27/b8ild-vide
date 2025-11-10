@@ -14,6 +14,7 @@ interface ProjectCardProps {
   jours_restants?: number;
   budget_devis?: number;
   couts_engages?: number;
+  etat_chantier?: string;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
 }
@@ -26,10 +27,24 @@ const ProjectCard = ({
   jours_restants,
   budget_devis = 0,
   couts_engages = 0,
+  etat_chantier = 'en_cours',
   onEdit,
   onDelete 
 }: ProjectCardProps) => {
   const navigate = useNavigate();
+  
+  const etatConfig: Record<string, { label: string; color: string; icon: string }> = {
+    'brouillon': { label: 'Brouillon', color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300', icon: '📝' },
+    'projection': { label: 'Projection', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300', icon: '🔮' },
+    'attente_signature': { label: 'En attente', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300', icon: '✍️' },
+    'en_cours': { label: 'En cours', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300', icon: '🚧' },
+    'suspendu': { label: 'Suspendu', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300', icon: '⏸️' },
+    'termine': { label: 'Terminé', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300', icon: '✅' },
+    'annule': { label: 'Annulé', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300', icon: '❌' },
+  };
+  
+  const currentEtat = etatConfig[etat_chantier] || etatConfig['en_cours'];
+  
   const getStatusColor = (rentabilite: number) => {
     if (rentabilite >= 20) return "bg-success";
     if (rentabilite >= 10) return "bg-warning";
@@ -56,8 +71,13 @@ const ProjectCard = ({
   return (
     <Card className="card-premium hover-lift group animate-scale-in">
       <CardHeader>
-        <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between">
           <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <Badge className={`${currentEtat.color} font-semibold px-2 py-1`}>
+                {currentEtat.icon} {currentEtat.label}
+              </Badge>
+            </div>
             <CardTitle className="text-lg font-bold flex items-center gap-2 group-hover:text-primary transition-smooth">
               <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-smooth">
                 <Building className="h-5 w-5 text-primary" />

@@ -239,17 +239,45 @@ const InvoiceManager = ({ chantierId, factures, onUpdate }: InvoiceManagerProps)
     setDetailsDialogOpen(true);
   };
 
-  const totalFactures = factures.reduce((sum, f) => sum + Number(f.montant_ht), 0);
+  // Calcul des totaux pour le récapitulatif
+  const totalHT = factures.reduce((sum, f) => sum + (Number(f.montant_ht) || 0), 0);
+  const totalTVA = factures.reduce((sum, f) => sum + (Number(f.tva_montant) || 0), 0);
+  const totalTTC = factures.reduce((sum, f) => sum + (Number(f.montant_ttc) || 0), 0);
 
   return (
     <>
+      {/* Récapitulatif financier */}
+      {factures.length > 0 && (
+        <Card className="mb-4 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+          <CardHeader>
+            <CardTitle className="text-lg">💰 Récapitulatif Financier</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-6">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground font-medium">Total HT</p>
+                <p className="text-3xl font-black text-foreground">{totalHT.toFixed(2)} €</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground font-medium">Total TVA</p>
+                <p className="text-3xl font-black text-amber-600">{totalTVA.toFixed(2)} €</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground font-medium">Total TTC</p>
+                <p className="text-3xl font-black text-primary">{totalTTC.toFixed(2)} €</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Factures Fournisseurs</CardTitle>
               <CardDescription>
-                Total : {totalFactures.toLocaleString()} € HT
+                {factures.length} facture{factures.length > 1 ? 's' : ''} enregistrée{factures.length > 1 ? 's' : ''}
               </CardDescription>
             </div>
             <Dialog open={open} onOpenChange={setOpen}>

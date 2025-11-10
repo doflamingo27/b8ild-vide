@@ -39,7 +39,11 @@ interface Chantier {
   budget_ht?: number;
   statut: string;
   date_creation: string;
-  date_debut: string | null;
+  date_debut_prevue: string | null;
+  date_debut_reelle?: string | null;
+  date_fin_estimee?: string | null;
+  date_fin_reelle?: string | null;
+  etat_chantier?: string;
 }
 
 const ProjectDetail = () => {
@@ -79,7 +83,7 @@ const ProjectDetail = () => {
     membres,
     budget_devis: devis?.montant_ttc || 0,
     couts_fixes: coutsFixes,
-    date_debut: chantier?.date_debut,
+    date_debut: chantier?.date_debut_prevue,
   });
 
   useEffect(() => {

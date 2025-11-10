@@ -40,23 +40,10 @@ const Header = () => {
     { path: "/dashboard", label: labels.nav.dashboard, icon: Home },
     { path: "/team", label: labels.nav.team, icon: Users },
     { path: "/projects", label: labels.nav.projects, icon: FolderKanban },
-    { path: "/templates", label: labels.nav.templates, icon: Files },
     { path: "/reports", label: labels.nav.reports, icon: FileText },
+    { path: "/import/facture", label: "Import Facture", icon: Receipt },
     { path: "/profile", label: labels.nav.profile, icon: User },
     { path: "/subscription", label: labels.nav.billing, icon: CreditCard },
-  ];
-
-  const tendersMenuItems = [
-    { path: "/tenders", label: "Dashboard AO", icon: "📊" },
-    { path: "/tenders/profile", label: "Profil AO", icon: "⚙️" },
-    { path: "/tenders/catalog", label: "Catalogue AO", icon: "📂" },
-    { path: "/tenders/import", label: "Importer AO", icon: "📥" },
-    { path: "/tenders/inbox", label: "Boîte de réception", icon: "📬" },
-  ];
-
-  const importMenuItems = [
-    { path: "/import/ao", label: "Importer un AO", icon: Upload },
-    { path: "/import/facture", label: "Importer une Facture", icon: Receipt },
   ];
 
   return (
@@ -89,77 +76,6 @@ const Header = () => {
               </Link>
             );
           })}
-
-          {/* Dropdown Import Documents */}
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="h-9 px-3 gap-2">
-                  <Upload className="h-4 w-4" />
-                  Import
-                </NavigationMenuTrigger>
-                <NavigationMenuContent className="min-w-[220px] p-2 bg-background border rounded-md shadow-lg z-[100]">
-                  <ul className="space-y-1">
-                    {importMenuItems.map((item) => {
-                      const Icon = item.icon;
-                      const isActive = location.pathname === item.path;
-                      return (
-                        <li key={item.path}>
-                          <Link 
-                            to={item.path}
-                            className={cn(
-                              "flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors",
-                              isActive 
-                                ? "bg-accent text-accent-foreground font-medium" 
-                                : "hover:bg-accent hover:text-accent-foreground"
-                            )}
-                          >
-                            <Icon className="h-4 w-4" />
-                            {item.label}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
-
-          {/* Dropdown Appels d'offres */}
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="h-9 px-3 gap-2">
-                  <FileText className="h-4 w-4" />
-                  {labels.nav.tenders}
-                </NavigationMenuTrigger>
-                <NavigationMenuContent className="min-w-[220px] p-2 bg-background border rounded-md shadow-lg z-[100]">
-                  <ul className="space-y-1">
-                    {tendersMenuItems.map((item) => {
-                      const isActive = location.pathname === item.path;
-                      return (
-                        <li key={item.path}>
-                          <Link 
-                            to={item.path}
-                            className={cn(
-                              "flex items-center gap-2 px-3 py-2 rounded text-sm transition-colors",
-                              isActive 
-                                ? "bg-accent text-accent-foreground font-medium" 
-                                : "hover:bg-accent hover:text-accent-foreground"
-                            )}
-                          >
-                            <span>{item.icon}</span>
-                            {item.label}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
         </nav>
 
         <div className="flex items-center gap-2">

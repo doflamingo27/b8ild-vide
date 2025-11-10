@@ -132,12 +132,16 @@ export type Database = {
           client: string
           created_at: string | null
           date_creation: string | null
-          date_debut: string | null
+          date_debut_prevue: string | null
+          date_debut_reelle: string | null
+          date_fin_estimee: string | null
           date_fin_prevue: string | null
+          date_fin_reelle: string | null
           description: string | null
           duree_estimee: number | null
           duree_estimee_jours: number | null
           entreprise_id: string
+          etat_chantier: string | null
           id: string
           nom_chantier: string
           statut: string | null
@@ -149,12 +153,16 @@ export type Database = {
           client: string
           created_at?: string | null
           date_creation?: string | null
-          date_debut?: string | null
+          date_debut_prevue?: string | null
+          date_debut_reelle?: string | null
+          date_fin_estimee?: string | null
           date_fin_prevue?: string | null
+          date_fin_reelle?: string | null
           description?: string | null
           duree_estimee?: number | null
           duree_estimee_jours?: number | null
           entreprise_id: string
+          etat_chantier?: string | null
           id?: string
           nom_chantier: string
           statut?: string | null
@@ -166,12 +174,16 @@ export type Database = {
           client?: string
           created_at?: string | null
           date_creation?: string | null
-          date_debut?: string | null
+          date_debut_prevue?: string | null
+          date_debut_reelle?: string | null
+          date_fin_estimee?: string | null
           date_fin_prevue?: string | null
+          date_fin_reelle?: string | null
           description?: string | null
           duree_estimee?: number | null
           duree_estimee_jours?: number | null
           entreprise_id?: string
+          etat_chantier?: string | null
           id?: string
           nom_chantier?: string
           statut?: string | null
