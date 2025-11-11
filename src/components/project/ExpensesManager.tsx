@@ -35,12 +35,12 @@ const ExpensesManager = ({ chantierId, frais, onUpdate }: ExpensesManagerProps) 
     { value: "Achat d'outillage", label: "Achat d'outillage", icon: "🔧" },
     { value: "Location d'outillage", label: "Location d'outillage", icon: "🔨" },
     { value: "Consommables", label: "Consommables", icon: "🍞" },
-    { value: "Frais de déplacement", label: "Frais de déplacement", icon: "🚗" },
+    { value: "Frais de déplacement", label: "Frais de déplacement", icon: "🚙" },
     { value: "Frais d'hébergement", label: "Frais d'hébergement", icon: "🏠" },
     { value: "Assurance", label: "Assurance", icon: "🛡️" },
     { value: "Permis & autorisations", label: "Permis & autorisations", icon: "📄" },
     { value: "Sous-traitant", label: "Sous-traitant", icon: "👷" },
-    { value: "Autre", label: "Autre", icon: "🔥" },
+    { value: "Autre", label: "Autre", icon: "📦" },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -232,7 +232,7 @@ const ExpensesManager = ({ chantierId, frais, onUpdate }: ExpensesManagerProps) 
             <TableBody>
               {frais.map((fraisItem) => {
                 const category = expenseCategories.find(c => c.value === fraisItem.type_frais);
-                const icon = category?.icon || "🔥";
+                const icon = category?.icon || "📦";
                 
                 return (
                   <TableRow key={fraisItem.id}>

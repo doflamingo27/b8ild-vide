@@ -18,7 +18,7 @@ import Reports from "./pages/Reports";
 import Subscription from "./pages/Subscription";
 import AuditHistory from "./pages/AuditHistory";
 import NotFound from "./pages/NotFound";
-import ImportFacture from "./pages/ImportFacture";
+import FinancialManagement from "./pages/FinancialManagement";
 
 const queryClient = new QueryClient();
 
@@ -46,9 +46,9 @@ const App = () => (
                 <Route path="/projects" element={<Projects />} />
                 <Route path="/projects/:id" element={<ProjectDetail />} />
                 <Route path="/reports" element={<Reports />} />
+                <Route path="/financial" element={<FinancialManagement />} />
                 <Route path="/subscription" element={<Subscription />} />
                 <Route path="/audit" element={<AuditHistory />} />
-                <Route path="/import/facture" element={<ImportFacture />} />
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

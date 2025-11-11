@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Users, FolderKanban, FileText, User, CreditCard, LogOut, HardHat, Files, Upload, Receipt } from "lucide-react";
+import { Home, Users, FolderKanban, FileText, User, CreditCard, LogOut, HardHat, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -40,8 +40,8 @@ const Header = () => {
     { path: "/dashboard", label: labels.nav.dashboard, icon: Home },
     { path: "/team", label: labels.nav.team, icon: Users },
     { path: "/projects", label: labels.nav.projects, icon: FolderKanban },
+    { path: "/financial", label: "Gestion financière", icon: DollarSign },
     { path: "/reports", label: labels.nav.reports, icon: FileText },
-    { path: "/import/facture", label: "Import Facture", icon: Receipt },
     { path: "/profile", label: labels.nav.profile, icon: User },
     { path: "/subscription", label: labels.nav.billing, icon: CreditCard },
   ];
