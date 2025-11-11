@@ -30,10 +30,16 @@ function extractAmountsWithContext(text: string) {
   
   if (amounts.length === 0) return {};
   
-  // Chercher HT/TTC/TVA DANS la section récapitulative
-  const htIndex = recapText.search(/total\s*h\.?t\.?|total\s+hors\s+taxes?|base\s*h\.?t\.?|montant\s*h\.?t\.?/i);
-  const ttcIndex = recapText.search(/total\s*t\.?t\.?c\.?/i);
-  const tvaAmtIndex = recapText.search(/t\.?v\.?a\.?\s*(?:à|a)?\s*\d{1,2}\s*%/i);
+  // ✅ Fonction pour chercher la DERNIÈRE occurrence d'un pattern
+  function lastIndexOfRegex(text: string, regex: RegExp): number {
+    const matches = [...text.matchAll(new RegExp(regex.source, 'gi'))];
+    return matches.length > 0 ? matches[matches.length - 1].index! : -1;
+  }
+  
+  // Chercher la DERNIÈRE occurrence de HT/TTC/TVA dans la section récapitulative
+  const htIndex = lastIndexOfRegex(recapText, /total\s*h\.?t\.?|total\s+hors\s+taxes?|base\s*h\.?t\.?|montant\s*h\.?t\.?/);
+  const ttcIndex = lastIndexOfRegex(recapText, /total\s*t\.?t\.?c\.?/);
+  const tvaAmtIndex = lastIndexOfRegex(recapText, /t\.?v\.?a\.?\s*(?:à|a)?\s*\d{1,2}\s*%/);
   
   const result: any = {};
   const usedIndices = new Set<number>();
@@ -97,11 +103,11 @@ export function parseFrenchDocument(
     const tvaPctMatch = R.TVA_PCT.exec(text)?.[1];
     if (tvaPctMatch) fields.tvaPct = normalizePercentFR(tvaPctMatch);
 
-    // HT : priorité 1 = proximité, priorité 2 = dernier match regex
+    // HT : priorité 1 = dernier match regex, priorité 2 = proximité
     R.HT.lastIndex = 0;
     const allHtMatches = [...text.matchAll(R.HT)].map(m => normalizeNumberFR(m[1])).filter(n => n != null);
     const htRegexFallback = allHtMatches.length > 0 ? allHtMatches[allHtMatches.length - 1] : null;
-    fields.ht = proximityExtraction.ht ?? htRegexFallback;
+    fields.ht = htRegexFallback ?? proximityExtraction.ht;
 
     console.log('[parseFR] HT matches trouvés:', allHtMatches.length);
     if (fields.ht) {
@@ -113,11 +119,11 @@ export function parseFrenchDocument(
     const netMatch = R.NET.exec(text)?.[1];
     if (netMatch) fields.net = normalizeNumberFR(netMatch);
 
-    // TTC : priorité 1 = proximité, priorité 2 = dernier match regex
+    // TTC : priorité 1 = dernier match regex, priorité 2 = proximité
     R.TTC.lastIndex = 0;
     const allTtcMatches = [...text.matchAll(R.TTC)].map(m => normalizeNumberFR(m[1])).filter(n => n != null);
     const ttcRegexFallback = allTtcMatches.length > 0 ? allTtcMatches[allTtcMatches.length - 1] : null;
-    fields.ttc = proximityExtraction.ttc ?? ttcRegexFallback;
+    fields.ttc = ttcRegexFallback ?? proximityExtraction.ttc;
 
     console.log('[parseFR] TTC matches trouvés:', allTtcMatches.length);
     if (fields.ttc) {
