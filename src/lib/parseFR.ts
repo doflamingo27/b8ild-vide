@@ -148,6 +148,18 @@ export function parseFrenchDocument(text: string, module: 'factures' | 'frais' |
       console.log('[parseFR] HT recalculé:', fields.ht);
     }
 
+    // Recalculer le montant de TVA pour garantir la cohérence
+    if (fields.ht && fields.tvaPct) {
+      const expectedTvaAmt = fields.ht * (fields.tvaPct / 100);
+      
+      // Si pas de montant TVA extrait, ou si le montant extrait diffère de plus de 2%
+      if (!fields.tvaAmt || Math.abs(fields.tvaAmt - expectedTvaAmt) / expectedTvaAmt > 0.02) {
+        console.log('[parseFR] Montant TVA incorrect ou manquant. Extrait:', fields.tvaAmt, 'Attendu:', expectedTvaAmt);
+        fields.tvaAmt = expectedTvaAmt;
+        console.log('[parseFR] Montant TVA recalculé:', fields.tvaAmt);
+      }
+    }
+
     // Vérifier cohérence HT/TTC (si HT >= TTC, probable erreur)
     if (fields.ht && fields.ttc && fields.ht >= fields.ttc) {
       console.warn('[parseFR] HT >= TTC détecté, inversion probable !');
