@@ -68,9 +68,11 @@ export function parseFrenchDocument(
 
   // Extraction factures/frais/devis
   if (module === 'factures' || module === 'frais' || module === 'devis') {
-    // Extraction par proximité (formats tabulaires)
+    // ✅ Extraction par proximité (formats tabulaires) avec logs détaillés
     const proximityExtraction = extractAmountsWithContext(text);
+    console.log('[parseFR] ===== EXTRACTION PAR PROXIMITÉ =====');
     console.log('[parseFR] Extraction par proximité:', proximityExtraction);
+    console.log('[parseFR] ========================================');
 
     // TVA % (extraire AVANT les montants pour la validation croisée)
     R.TVA_PCT.lastIndex = 0;
@@ -184,6 +186,11 @@ export function parseFrenchDocument(
       console.warn('[parseFR] ⚠️ Impossible de calculer TVA montant:', { ht: fields.ht, tvaPct: fields.tvaPct });
     }
 
+    // ✅ Validation de cohérence renforcée
+    if (fields.ht && fields.ttc && fields.ht > fields.ttc * 1.5) {
+      console.warn('[parseFR] ⚠️ HT >> TTC (HT beaucoup plus grand que TTC), probable erreur d\'extraction');
+    }
+
     // Vérification cohérence finale
     const totalsOk = checkTotals(
       fields.ht ?? null,
@@ -193,6 +200,15 @@ export function parseFrenchDocument(
     );
 
     fields.totalsOk = totalsOk;
+
+    // ✅ LOGS FINAUX
+    console.log('[parseFR] ===== RÉSULTAT FINAL =====');
+    console.log('[parseFR] HT final:', fields.ht);
+    console.log('[parseFR] TVA% final:', fields.tvaPct);
+    console.log('[parseFR] TVA montant final:', fields.tvaAmt);
+    console.log('[parseFR] TTC final:', fields.ttc);
+    console.log('[parseFR] Totals OK:', totalsOk);
+    console.log('[parseFR] ============================');
   }
 
   // Extraction AO

@@ -1,6 +1,7 @@
 export function normalizeNumberFR(raw?: string | null): number | null {
   if (!raw) return null;
   
+  const originalRaw = raw;
   let s = String(raw)
     .replace(/\u00A0/g, ' ')
     .replace(/€/g, '')
@@ -9,46 +10,51 @@ export function normalizeNumberFR(raw?: string | null): number | null {
   // Supprimer tous les espaces
   s = s.replace(/\s+/g, '');
   
+  // ✅ Logique renforcée pour virgule/point en français
   // Si contient à la fois . et , → . = milliers, , = décimale
   if (s.includes('.') && s.includes(',')) {
     s = s.replace(/\./g, '').replace(/,/, '.');
-  } else {
-    // Si seule virgule et 1-2 décimales: remplacer virgule par point
-    s = s.replace(/,(?=\d{1,2}$)/, '.');
-    // Sinon supprimer points-milliers
-    s = s.replace(/\.(?=\d{3}\b)/g, '');
+  } 
+  // Si UNIQUEMENT virgule → c'est forcément une décimale en français
+  else if (s.includes(',')) {
+    s = s.replace(/,/, '.');
+  }
+  // Si UNIQUEMENT point ET 1-2 chiffres après → c'est une décimale
+  else if (s.match(/\.\d{1,2}$/)) {
+    // Garder le point tel quel (déjà un séparateur décimal)
+  }
+  // Sinon (point avec 3+ chiffres après) → c'est un séparateur de milliers
+  else if (s.includes('.')) {
+    s = s.replace(/\./g, '');
   }
   
   // Garder chiffres, signe, point
   s = s.replace(/[^0-9\.\-]/g, '');
-  if (!s || s === '-' || s === '.' || s === '-.') return null;
+  if (!s || s === '-' || s === '.' || s === '-.') {
+    console.log(`[normalizeNumberFR] Input: "${originalRaw}" → Rejected (empty after cleaning)`);
+    return null;
+  }
   
   let n = Number(s);
-  if (!Number.isFinite(n)) return null;
-  
-  // Heuristique OCR : si nombre > 10000 sans séparateur décimal, probable erreur OCR
-  if (!raw.includes(',') && !raw.includes('.') && n > 10000 && n < 1000000) {
-    const candidate = n / 100;
-    console.warn(`[normalizeNumberFR] Nombre suspect sans séparateur: "${raw}" → ${n}, correction proposée: ${candidate}`);
-    n = candidate;
+  if (!Number.isFinite(n)) {
+    console.log(`[normalizeNumberFR] Input: "${originalRaw}" → Rejected (not finite)`);
+    return null;
   }
   
-  // Détection erreur x10 : si le nombre semble multiplié par 10 (e.g., 3297 au lieu de 329.7)
-  if (raw.includes(',') && n > 100 && n % 10 === 0) {
-    const lastCommaPos = raw.lastIndexOf(',');
-    const afterComma = raw.substring(lastCommaPos + 1).replace(/[^0-9]/g, '');
-    if (afterComma.length === 2) {
-      // Le nombre devrait avoir 2 décimales, pas 1
-      const candidate = n / 10;
-      console.warn(`[normalizeNumberFR] Possible erreur x10: "${raw}" → ${n}, correction proposée: ${candidate}`);
-      // On ne corrige pas automatiquement, juste un warning
-    }
-  }
+  // ✅ SUPPRESSION des heuristiques OCR problématiques (pas de division automatique par 100 ou 10)
   
   // Bornes sûres
-  if (Math.abs(n) > 999999999999.99) return null;
+  if (Math.abs(n) > 999999999999.99) {
+    console.log(`[normalizeNumberFR] Input: "${originalRaw}" → Rejected (out of bounds)`);
+    return null;
+  }
   
-  return n;
+  // ✅ Arrondi systématique à 2 décimales
+  const rounded = Math.round(n * 100) / 100;
+  
+  console.log(`[normalizeNumberFR] Input: "${originalRaw}" → Cleaned: "${s}" → Parsed: ${n} → Rounded: ${rounded}`);
+  
+  return rounded;
 }
 
 export function normalizePercentFR(raw?: string | null): number | null {

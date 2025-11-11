@@ -32,14 +32,21 @@ export default function AutoExtractUploader({ module, entrepriseId, chantierId, 
     setSavedId(null);
 
     try {
-      console.log('[OCR] Starting extraction with OCR.space...', { module, file: file.name });
+      console.log('[AutoExtractUploader] ========================================');
+      console.log('[AutoExtractUploader] Début extraction:', file.name);
+      console.log('[AutoExtractUploader] Module:', module);
       
       // 1️⃣ OCR.space
       const { text, confidence: ocrConfidence, provider } = await extractWithOcrSpace(file);
-      console.log('[OCR] Success:', { provider, textLength: text.length, ocrConfidence });
+      console.log('[AutoExtractUploader] OCR confidence:', ocrConfidence);
+      console.log('[AutoExtractUploader] Texte OCR (premiers 800 caractères):', text.substring(0, 800));
 
       // 2️⃣ Parser français
+      console.log('[AutoExtractUploader] ===== PARSING AVEC parseFR =====');
       const fields = parseFrenchDocument(text, module);
+      console.log('[AutoExtractUploader] ===== CHAMPS EXTRAITS PAR parseFR =====');
+      console.log('[AutoExtractUploader] Champs extraits:', JSON.stringify(fields, null, 2));
+      console.log('[AutoExtractUploader] =========================================');
       
       // Debug: Afficher texte OCR brut (1000 premiers caractères)
       console.log('[Parser] Raw OCR text (first 1000 chars):', text.substring(0, 1000));
@@ -201,9 +208,15 @@ export default function AutoExtractUploader({ module, entrepriseId, chantierId, 
       }
 
       // 5️⃣ Sauvegarde DB
-      console.log('[AutoExtract] Saving to DB:', { table, payload });
+      console.log('[AutoExtractUploader] ===== PAYLOAD FINAL ENVOYÉ À LA DB =====');
+      console.log('[AutoExtractUploader] Table:', table);
+      console.log('[AutoExtractUploader] Payload:', JSON.stringify(payload, null, 2));
+      console.log('[AutoExtractUploader] =============================================');
+      
       const id = await saveExtraction(table, entrepriseId, payload);
-      console.log('[AutoExtract] Saved with ID:', id);
+      
+      console.log('[AutoExtractUploader] ✅ Extraction enregistrée avec succès:', id);
+      console.log('[AutoExtractUploader] ========================================');
 
       setSavedId(id);
       setExtraction({ fields, confidence: finalConfidence });
