@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Pencil, Trash2, Users, Calculator } from "lucide-react";
+import { UserPlus, Pencil, Trash2, Users, Calculator, UserCheck, Hammer } from "lucide-react";
 import { useCalculations } from "@/hooks/useCalculations";
 import EmptyState from "@/components/EmptyState";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -38,6 +38,7 @@ const Team = () => {
   const [loading, setLoading] = useState(false);
   const [entrepriseId, setEntrepriseId] = useState<string | null>(null);
   const [editingMembre, setEditingMembre] = useState<Membre | null>(null);
+  const [filterStatus, setFilterStatus] = useState<'all' | 'actifs' | 'inactifs'>('all');
   const [formData, setFormData] = useState({
     prenom: "",
     nom: "",
@@ -182,6 +183,23 @@ const Team = () => {
     });
   };
 
+  // Filtrage des membres
+  const filteredMembres = membres.filter(membre => {
+    if (filterStatus === 'actifs') return membre.actif;
+    if (filterStatus === 'inactifs') return !membre.actif;
+    return true;
+  });
+
+  // Calcul des KPIs
+  const totalMembres = membres.length;
+  const membresActifs = membres.filter(m => m.actif).length;
+  const ouvriers = membres.filter(m => 
+    m.actif && (m.poste.toLowerCase().includes('ouvrier') || m.specialite.toLowerCase().includes('ouvrier'))
+  ).length;
+  const coutMoyenHoraire = membresActifs > 0 
+    ? membres.filter(m => m.actif).reduce((sum, m) => sum + m.taux_horaire, 0) / membresActifs 
+    : 0;
+
   return (
     <div className="space-y-8 animate-fade-up">
       <ConfirmDialog
@@ -195,10 +213,10 @@ const Team = () => {
         <div>
           <h1 className="text-4xl font-black text-gradient-primary flex items-center gap-3">
             <Users className="h-9 w-9 text-primary" aria-hidden="true" />
-            {labels.nav.team}
+            Mon Équipe
           </h1>
           <p className="text-muted-foreground mt-2 text-lg">
-            Gérez les membres de votre équipe et leurs coûts
+            Gérez vos salariés et leurs coûts
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={(open) => {
@@ -209,11 +227,11 @@ const Team = () => {
             <Button 
               size="lg" 
               className="gap-2 font-bold"
-              aria-label={labels.actions.add}
-              title={labels.actions.add}
+              aria-label="Ajouter un membre"
+              title="Ajouter un membre"
             >
               <UserPlus className="h-5 w-5" aria-hidden="true" />
-              {emptyStates.team.primary}
+              Ajouter un membre
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
@@ -325,39 +343,87 @@ const Team = () => {
         </Dialog>
       </div>
 
-      <Card className="card-premium">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-2xl font-black">
-            <Calculator className="h-6 w-6 text-primary" aria-hidden="true" />
-            Coût total de l'équipe
-          </CardTitle>
-          <CardDescription className="text-base">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="cursor-help underline decoration-dotted">
-                    {tooltips.kpiTeamCost}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{tooltips.kpiTeamCost}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-5xl font-black font-mono text-gradient-primary">
-            {cout_journalier_equipe.toFixed(2)} €<span className="text-xl text-muted-foreground font-sans">/jour</span>
-          </div>
-        </CardContent>
-      </Card>
+      {/* KPI Cards */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase">
+              Total Membres
+            </CardTitle>
+            <Users className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black">{totalMembres}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase">
+              Actifs
+            </CardTitle>
+            <UserCheck className="h-5 w-5 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-green-600">{membresActifs}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase">
+              Coût Moyen/H
+            </CardTitle>
+            <Calculator className="h-5 w-5 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-amber-600">{coutMoyenHoraire.toFixed(2)}€</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase">
+              Ouvriers
+            </CardTitle>
+            <Hammer className="h-5 w-5 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-blue-600">{ouvriers}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filtres */}
+      <div className="flex gap-2">
+        <Button
+          variant={filterStatus === 'all' ? 'default' : 'outline'}
+          onClick={() => setFilterStatus('all')}
+          className="font-semibold"
+        >
+          Tous
+        </Button>
+        <Button
+          variant={filterStatus === 'actifs' ? 'default' : 'outline'}
+          onClick={() => setFilterStatus('actifs')}
+          className="font-semibold"
+        >
+          ✅ Actifs
+        </Button>
+        <Button
+          variant={filterStatus === 'inactifs' ? 'default' : 'outline'}
+          onClick={() => setFilterStatus('inactifs')}
+          className="font-semibold"
+        >
+          ❌ Inactifs
+        </Button>
+      </div>
 
       <Card className="card-premium">
         <CardHeader>
           <CardTitle className="text-2xl font-black">Liste des membres</CardTitle>
           <CardDescription className="text-base">
-            {membres.filter(m => m.actif).length} membre(s) actif(s)
+            {filteredMembres.length} membre(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -375,22 +441,22 @@ const Team = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {membres.length === 0 ? (
+                {filteredMembres.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-12">
                       <EmptyState
                         icon={Users}
-                        title={emptyStates.team.title}
-                        text={emptyStates.team.text}
+                        title="Aucun membre pour le moment"
+                        text="Ajoutez vos premiers salariés pour pouvoir les affecter aux chantiers"
                         primaryAction={{
-                          label: emptyStates.team.primary,
+                          label: "Ajouter un membre",
                           onClick: () => setDialogOpen(true),
                         }}
                       />
                     </TableCell>
                   </TableRow>
                 ) : (
-                  membres.map((membre) => (
+                  filteredMembres.map((membre) => (
                     <TableRow key={membre.id} className="hover:bg-muted/50 transition-colors">
                       <TableCell className="font-bold">
                         {membre.prenom} {membre.nom}

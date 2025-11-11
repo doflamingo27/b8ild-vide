@@ -21,6 +21,8 @@ const Projects = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [entrepriseId, setEntrepriseId] = useState<string | null>(null);
+  const [editStateDialogOpen, setEditStateDialogOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<any | null>(null);
   const [formData, setFormData] = useState({
     nom_chantier: "",
     client: "",
@@ -132,6 +134,39 @@ const Projects = () => {
     if (!p.date_fin_estimee || p.etat_chantier === 'termine' || p.etat_chantier === 'annule') return false;
     return new Date(p.date_fin_estimee) < new Date();
   }).length;
+
+  const handleEditState = (project: any) => {
+    setEditingProject(project);
+    setEditStateDialogOpen(true);
+  };
+
+  const handleUpdateState = async (newState: string) => {
+    if (!editingProject) return;
+
+    try {
+      const { error } = await supabase
+        .from("chantiers")
+        .update({ etat_chantier: newState })
+        .eq("id", editingProject.id);
+
+      if (error) throw error;
+
+      toast({
+        title: toasts.updated,
+        description: "L'état du chantier a été modifié.",
+      });
+
+      setEditStateDialogOpen(false);
+      setEditingProject(null);
+      loadProjects();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: toasts.errorGeneric,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="space-y-8 animate-fade-up">
@@ -360,10 +395,81 @@ const Projects = () => {
               rentabilite={0}
               jours_restants={project.duree_estimee}
               etat_chantier={project.etat_chantier}
+              onEdit={handleEditState}
             />
           ))}
         </div>
       )}
+
+      {/* Dialog d'édition de l'état */}
+      <Dialog open={editStateDialogOpen} onOpenChange={setEditStateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black">Modifier l'état du chantier</DialogTitle>
+            <DialogDescription className="text-base">
+              Choisissez le nouvel état pour "{editingProject?.nom_chantier}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 py-4">
+            <Button
+              variant="outline"
+              className="justify-start h-auto py-3"
+              onClick={() => handleUpdateState('brouillon')}
+            >
+              <span className="text-2xl mr-3">📝</span>
+              <span className="font-semibold">Brouillon</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-auto py-3"
+              onClick={() => handleUpdateState('projection')}
+            >
+              <span className="text-2xl mr-3">🔮</span>
+              <span className="font-semibold">Projection</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-auto py-3"
+              onClick={() => handleUpdateState('attente_signature')}
+            >
+              <span className="text-2xl mr-3">✍️</span>
+              <span className="font-semibold">En attente de signature</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-auto py-3"
+              onClick={() => handleUpdateState('en_cours')}
+            >
+              <span className="text-2xl mr-3">🚧</span>
+              <span className="font-semibold">En cours</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-auto py-3"
+              onClick={() => handleUpdateState('suspendu')}
+            >
+              <span className="text-2xl mr-3">⏸️</span>
+              <span className="font-semibold">Suspendu</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-auto py-3"
+              onClick={() => handleUpdateState('termine')}
+            >
+              <span className="text-2xl mr-3">✅</span>
+              <span className="font-semibold">Terminé</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-auto py-3"
+              onClick={() => handleUpdateState('annule')}
+            >
+              <span className="text-2xl mr-3">❌</span>
+              <span className="font-semibold">Annulé</span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
