@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import KPICard from "@/components/KPICard";
 import ProjectCard from "@/components/ProjectCard";
 import EmptyState from "@/components/EmptyState";
-import { TrendingUp, Users, AlertTriangle, Building, Upload, Receipt, FileText, Plus } from "lucide-react";
+import { TrendingUp, Users, AlertTriangle, Building, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -214,21 +214,6 @@ const Dashboard = () => {
           icon={AlertTriangle}
           subtitle="chantiers à surveiller"
         />
-      </div>
-
-      {/* Actions rapides */}
-      <div className="grid gap-4 md:grid-cols-1">
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => navigate("/import/facture")}>
-          <CardHeader className="flex flex-row items-center gap-4">
-            <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-              <Receipt className="h-8 w-8 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-xl">Importer une facture</CardTitle>
-              <CardDescription>Extraction automatique 100% des données</CardDescription>
-            </div>
-          </CardHeader>
-        </Card>
       </div>
 
       <div className="space-y-4">
