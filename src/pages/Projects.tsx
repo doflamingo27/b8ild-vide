@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Building } from "lucide-react";
+import { Plus, Search, Building, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ProjectCard from "@/components/ProjectCard";
 import EmptyState from "@/components/EmptyState";
 import { labels, placeholders, toasts, emptyStates } from "@/lib/content";
@@ -122,6 +123,15 @@ const Projects = () => {
       project.nom_chantier.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.client.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Calcul des statistiques
+  const totalChantiers = projects.length;
+  const chantiersEnCours = projects.filter(p => p.etat_chantier === 'en_cours').length;
+  const chantiersTermines = projects.filter(p => p.etat_chantier === 'termine').length;
+  const chantiersEnRetard = projects.filter(p => {
+    if (!p.date_fin_estimee || p.etat_chantier === 'termine' || p.etat_chantier === 'annule') return false;
+    return new Date(p.date_fin_estimee) < new Date();
+  }).length;
 
   return (
     <div className="space-y-8 animate-fade-up">
@@ -259,6 +269,57 @@ const Projects = () => {
             </form>
           </DialogContent>
         </Dialog>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase">
+              Total Chantiers
+            </CardTitle>
+            <Building className="h-5 w-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black">{totalChantiers}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase">
+              En Cours
+            </CardTitle>
+            <Clock className="h-5 w-5 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-blue-600">{chantiersEnCours}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase">
+              Terminés
+            </CardTitle>
+            <CheckCircle2 className="h-5 w-5 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-green-600">{chantiersTermines}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase">
+              En Retard
+            </CardTitle>
+            <AlertCircle className="h-5 w-5 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-amber-600">{chantiersEnRetard}</div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="relative">
