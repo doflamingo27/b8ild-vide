@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 interface Props {
-  module: 'ao' | 'factures' | 'frais';
+  module: 'ao' | 'factures' | 'frais' | 'devis';
   confidence: number;
   fields: any;
 }

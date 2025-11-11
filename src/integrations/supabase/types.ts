@@ -276,34 +276,58 @@ export type Database = {
       }
       devis: {
         Row: {
+          actif: boolean | null
           chantier_id: string
+          confiance: number | null
           created_at: string | null
+          date_acceptation: string | null
+          date_envoi: string | null
+          extraction_json: Json | null
           fichier_url: string | null
           id: string
           montant_ht: number
           montant_ttc: number
+          pages_count: number | null
+          statut: string | null
           tva: number
           updated_at: string | null
+          version: string | null
         }
         Insert: {
+          actif?: boolean | null
           chantier_id: string
+          confiance?: number | null
           created_at?: string | null
+          date_acceptation?: string | null
+          date_envoi?: string | null
+          extraction_json?: Json | null
           fichier_url?: string | null
           id?: string
           montant_ht?: number
           montant_ttc?: number
+          pages_count?: number | null
+          statut?: string | null
           tva?: number
           updated_at?: string | null
+          version?: string | null
         }
         Update: {
+          actif?: boolean | null
           chantier_id?: string
+          confiance?: number | null
           created_at?: string | null
+          date_acceptation?: string | null
+          date_envoi?: string | null
+          extraction_json?: Json | null
           fichier_url?: string | null
           id?: string
           montant_ht?: number
           montant_ttc?: number
+          pages_count?: number | null
+          statut?: string | null
           tva?: number
           updated_at?: string | null
+          version?: string | null
         }
         Relationships: [
           {
@@ -1218,6 +1242,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      insert_devis_extraction: {
+        Args: { p_chantier_id: string; p_data: Json; p_entreprise_id: string }
+        Returns: string
       }
       insert_extraction_service: {
         Args: { p_data: Json; p_entreprise_id: string; p_table: string }

@@ -56,7 +56,7 @@ const ProjectDetail = () => {
   const { metrics, loading: metricsLoading } = useChantierMetrics(id || '');
   
   const [chantier, setChantier] = useState<Chantier | null>(null);
-  const [devis, setDevis] = useState<any>(null);
+  const [devis, setDevis] = useState<any[]>([]);
   const [factures, setFactures] = useState<any[]>([]);
   const [membres, setMembres] = useState<any[]>([]);
   const [frais, setFrais] = useState<any[]>([]);
@@ -79,9 +79,12 @@ const ProjectDetail = () => {
   const totalFrais = frais.reduce((sum, f) => sum + Number(f.montant_total), 0);
   const coutsFixes = totalFactures + totalFrais;
 
+  // Trouver le devis actif
+  const devisActif = devis.find(d => d.actif);
+
   const calculations = useCalculations({
     membres,
-    budget_devis: devis?.montant_ttc || 0,
+    budget_devis: devisActif?.montant_ttc || 0,
     couts_fixes: coutsFixes,
     date_debut: chantier?.date_debut_prevue,
   });
@@ -106,13 +109,13 @@ const ProjectDetail = () => {
       if (chantierError) throw chantierError;
       setChantier(chantierData);
 
-      // Charger le devis
+      // Charger tous les devis (triés par version)
       const { data: devisData } = await supabase
         .from("devis")
         .select("*")
         .eq("chantier_id", id)
-        .maybeSingle();
-      setDevis(devisData);
+        .order('created_at', { ascending: false });
+      setDevis(devisData || []);
 
       // Charger les factures
       const { data: facturesData } = await supabase

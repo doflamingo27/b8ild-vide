@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, Loader2, AlertCircle } from 'lucide-react';
 
 type Props = {
-  module: 'ao' | 'factures' | 'frais';
+  module: 'ao' | 'factures' | 'frais' | 'devis';
   entrepriseId: string;
   chantierId?: string;
   onSaved?: (id: string) => void;
@@ -45,7 +45,7 @@ export default function AutoExtractUploader({ module, entrepriseId, chantierId, 
       console.log('[Parser] Raw OCR text (first 1000 chars):', text.substring(0, 1000));
       
       // Debug: Afficher tous les matches pour diagnostiquer
-      if (module === 'factures' || module === 'frais') {
+      if (module === 'factures' || module === 'frais' || module === 'devis') {
         const { R } = await import('@/lib/extract/regexFR');
         console.log('[Parser] All HT matches:', [...text.matchAll(R.HT)].map(m => m[1]));
         console.log('[Parser] All TTC matches:', [...text.matchAll(R.TTC)].map(m => m[1]));
@@ -92,7 +92,7 @@ export default function AutoExtractUploader({ module, entrepriseId, chantierId, 
       finalConfidence = Math.min(1, finalConfidence);
 
       // 4️⃣ Mapping table + payload
-      let table: 'tenders' | 'factures_fournisseurs' | 'frais_chantier';
+      let table: 'tenders' | 'factures_fournisseurs' | 'frais_chantier' | 'devis';
       let payload: any = { 
         extraction_provider: provider,
         extraction_json: { text, fields, confidence: finalConfidence },
@@ -157,6 +157,35 @@ export default function AutoExtractUploader({ module, entrepriseId, chantierId, 
         } else {
           payload.extraction_status = 'complete';
         }
+
+      } else if (module === 'devis') {
+        table = 'devis';
+
+        // ✅ Même logique que factures
+        const montant_ht = fields.ht ?? null;
+        const montant_ttc = fields.ttc ?? null;
+        const tva_montant = fields.tvaAmt ?? null;
+
+        // Borner TVA %
+        let tva_pct = fields.tvaPct ?? null;
+        if (tva_pct != null) {
+          tva_pct = Math.max(0, Math.min(100, tva_pct));
+        }
+
+        // Borner montants
+        const MAX = 999999999999.99;
+        const safe_ht = (montant_ht != null && montant_ht >= 0 && montant_ht <= MAX) ? montant_ht : null;
+        const safe_ttc = (montant_ttc != null && montant_ttc >= 0 && montant_ttc <= MAX) ? montant_ttc : null;
+
+        payload = {
+          ...payload,
+          chantier_id: chantierId ?? null,
+          montant_ht: safe_ht,
+          tva: tva_pct,
+          montant_ttc: safe_ttc,
+          statut: 'brouillon',
+          actif: true, // Sera géré par insert_devis_extraction
+        };
 
       } else {
         table = 'frais_chantier';

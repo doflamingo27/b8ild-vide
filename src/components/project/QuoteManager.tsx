@@ -4,27 +4,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, FileText, Loader2 } from "lucide-react";
+import { Plus, FileText, Loader2, CheckCircle2, Clock, Send, XCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AutoExtractUploader from "@/components/AutoExtractUploader";
 import { useQuery } from "@tanstack/react-query";
 
 interface QuoteManagerProps {
   chantierId: string;
-  devis: any;
+  devis: any[];
   onUpdate: () => void;
 }
 
-const QuoteManager = ({ chantierId, devis, onUpdate }: QuoteManagerProps) => {
+const QuoteManager = ({ chantierId, devis = [], onUpdate }: QuoteManagerProps) => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
-    montant_ht: devis?.montant_ht || 0,
-    tva: devis?.tva || 20,
-    montant_ttc: devis?.montant_ttc || 0,
+    montant_ht: 0,
+    tva: 20,
+    montant_ttc: 0,
+    statut: 'brouillon',
   });
 
   // Récupérer entrepriseId pour AutoExtractUploader
@@ -44,6 +48,8 @@ const QuoteManager = ({ chantierId, devis, onUpdate }: QuoteManagerProps) => {
     }
   });
 
+  const devisList = Array.isArray(devis) ? devis : [];
+  const devisActif = devisList.find(d => d.actif);
 
   const calculateTTC = (ht: number, tva: number) => {
     return ht * (1 + tva / 100);
@@ -66,13 +72,13 @@ const QuoteManager = ({ chantierId, devis, onUpdate }: QuoteManagerProps) => {
     setLoading(true);
 
     try {
-      let fichier_url = devis?.fichier_url;
+      let fichier_url = null;
 
       // Upload du fichier si présent
       if (file) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${chantierId}-devis-${Date.now()}.${fileExt}`;
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('devis')
           .upload(fileName, file);
 
@@ -85,32 +91,47 @@ const QuoteManager = ({ chantierId, devis, onUpdate }: QuoteManagerProps) => {
         fichier_url = publicUrl;
       }
 
-      // Créer ou mettre à jour le devis
+      // Auto-incrémenter la version
+      const maxVersion = devisList.length > 0 
+        ? Math.max(...devisList.map(d => parseInt(d.version?.replace('V', '') || '0'))) 
+        : 0;
+      const newVersion = `V${maxVersion + 1}`;
+
+      // Désactiver tous les autres devis si c'est le premier
+      if (devisList.length === 0) {
+        await supabase
+          .from("devis")
+          .update({ actif: false })
+          .eq("chantier_id", chantierId);
+      }
+
       const devisData = {
         ...formData,
         chantier_id: chantierId,
         fichier_url,
+        version: newVersion,
+        actif: devisList.length === 0, // Premier devis = actif
       };
 
-      if (devis) {
-        const { error } = await supabase
-          .from("devis")
-          .update(devisData)
-          .eq("id", devis.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("devis")
-          .insert(devisData);
-        if (error) throw error;
-      }
+      const { error } = await supabase
+        .from("devis")
+        .insert(devisData);
+      
+      if (error) throw error;
 
       toast({
         title: "Succès",
-        description: "Le devis a été enregistré avec succès",
+        description: `Devis ${newVersion} créé avec succès`,
       });
 
       setOpen(false);
+      setFormData({
+        montant_ht: 0,
+        tva: 20,
+        montant_ttc: 0,
+        statut: 'brouillon',
+      });
+      setFile(null);
       onUpdate();
     } catch (error: any) {
       toast({
@@ -123,6 +144,53 @@ const QuoteManager = ({ chantierId, devis, onUpdate }: QuoteManagerProps) => {
     }
   };
 
+  const handleToggleActif = async (devisId: string) => {
+    try {
+      // Désactiver tous les autres devis
+      await supabase
+        .from("devis")
+        .update({ actif: false })
+        .eq("chantier_id", chantierId);
+
+      // Activer le devis sélectionné
+      const { error } = await supabase
+        .from("devis")
+        .update({ actif: true })
+        .eq("id", devisId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Devis actif mis à jour",
+      });
+
+      onUpdate();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getStatutBadge = (statut: string) => {
+    const config = {
+      brouillon: { label: "Brouillon", variant: "secondary" as const, icon: Clock },
+      envoye: { label: "Envoyé", variant: "default" as const, icon: Send },
+      accepte: { label: "Accepté", variant: "default" as const, icon: CheckCircle2 },
+      refuse: { label: "Refusé", variant: "destructive" as const, icon: XCircle },
+    };
+    const { label, variant, icon: Icon } = config[statut as keyof typeof config] || config.brouillon;
+    return (
+      <Badge variant={variant} className="gap-1">
+        <Icon className="h-3 w-3" />
+        {label}
+      </Badge>
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -130,18 +198,19 @@ const QuoteManager = ({ chantierId, devis, onUpdate }: QuoteManagerProps) => {
           <div>
             <CardTitle>Devis</CardTitle>
             <CardDescription>
-              Gestion du devis du chantier
+              Gestion des devis du chantier
             </CardDescription>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button>
-                {devis ? "Modifier" : <><Plus className="mr-2 h-4 w-4" />Ajouter</>}
+                <Plus className="mr-2 h-4 w-4" />
+                Nouveau devis
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-3xl">
               <DialogHeader>
-                <DialogTitle>{devis ? "Modifier" : "Ajouter"} un devis</DialogTitle>
+                <DialogTitle>Créer un nouveau devis</DialogTitle>
                 <DialogDescription>
                   Uploadez votre devis pour extraction automatique (OCR.space)
                 </DialogDescription>
@@ -149,52 +218,18 @@ const QuoteManager = ({ chantierId, devis, onUpdate }: QuoteManagerProps) => {
 
               {entreprise?.id && (
                 <div className="border rounded-lg p-4 bg-muted/30">
-                  <p className="text-sm font-semibold mb-3">Option 1 : Upload automatique (recommandé)</p>
+                  <p className="text-sm font-semibold mb-3">📄 Option 1 : Extraction automatique (recommandé)</p>
                   <AutoExtractUploader 
-                    module="factures"
+                    module="devis"
                     entrepriseId={entreprise.id}
                     chantierId={chantierId}
-                    onSaved={async (factureId) => {
-                      // Récupérer la facture créée
-                      const { data: facture } = await supabase
-                        .from('factures_fournisseurs')
-                        .select('*')
-                        .eq('id', factureId)
-                        .single();
-                      
-                      if (facture) {
-                        // Créer/Mettre à jour le devis à partir de la facture
-                        const devisData = {
-                          chantier_id: chantierId,
-                          montant_ht: facture.montant_ht || 0,
-                          tva: facture.tva_pct || 20,
-                          montant_ttc: facture.montant_ttc || 0,
-                        };
-                        
-                        if (devis?.id) {
-                          await supabase
-                            .from('devis')
-                            .update(devisData)
-                            .eq('id', devis.id);
-                        } else {
-                          await supabase
-                            .from('devis')
-                            .insert(devisData);
-                        }
-                        
-                        // Supprimer la facture temporaire
-                        await supabase
-                          .from('factures_fournisseurs')
-                          .delete()
-                          .eq('id', factureId);
-                        
-                        toast({
-                          title: "✅ Devis enregistré",
-                          description: "L'extraction OCR a réussi",
-                        });
-                        setOpen(false);
-                        onUpdate();
-                      }
+                    onSaved={async (devisId) => {
+                      toast({
+                        title: "✅ Devis enregistré",
+                        description: "L'extraction OCR a réussi",
+                      });
+                      setOpen(false);
+                      onUpdate();
                     }}
                   />
                 </div>
@@ -206,101 +241,163 @@ const QuoteManager = ({ chantierId, devis, onUpdate }: QuoteManagerProps) => {
 
               <form onSubmit={handleSubmit}>
                 <div className="space-y-4">
-                  <p className="text-sm font-semibold">Option 2 : Saisie manuelle</p>
+                  <p className="text-sm font-semibold">✍️ Option 2 : Saisie manuelle</p>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="file">Fichier (optionnel)</Label>
-                    <Input
-                      id="file"
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => setFile(e.target.files?.[0] || null)}
-                      disabled={loading}
-                    />
-                  </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="montant_ht">Montant HT (€)</Label>
-                        <Input
-                          id="montant_ht"
-                          type="number"
-                          step="0.01"
-                          value={formData.montant_ht}
-                          onChange={(e) => handleHTChange(e.target.value)}
-                          required
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="tva">TVA (%)</Label>
-                        <Input
-                          id="tva"
-                          type="number"
-                          step="0.01"
-                          value={formData.tva}
-                          onChange={(e) => handleTVAChange(e.target.value)}
-                          required
-                        />
-                      </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="file">Fichier (optionnel)</Label>
+                      <Input
+                        id="file"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => setFile(e.target.files?.[0] || null)}
+                        disabled={loading}
+                      />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="montant_ttc">Montant TTC (€)</Label>
+                      <Label htmlFor="statut">Statut</Label>
+                      <Select 
+                        value={formData.statut} 
+                        onValueChange={(value) => setFormData({ ...formData, statut: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="brouillon">Brouillon</SelectItem>
+                          <SelectItem value="envoye">Envoyé</SelectItem>
+                          <SelectItem value="accepte">Accepté</SelectItem>
+                          <SelectItem value="refuse">Refusé</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="montant_ht">Montant HT (€)</Label>
                       <Input
-                        id="montant_ttc"
+                        id="montant_ht"
                         type="number"
                         step="0.01"
-                        value={formData.montant_ttc}
-                        readOnly
-                        className="bg-muted"
+                        value={formData.montant_ht}
+                        onChange={(e) => handleHTChange(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="tva">TVA (%)</Label>
+                      <Input
+                        id="tva"
+                        type="number"
+                        step="0.01"
+                        value={formData.tva}
+                        onChange={(e) => handleTVAChange(e.target.value)}
+                        required
                       />
                     </div>
                   </div>
 
-                  <DialogFooter>
-                    <Button type="submit" disabled={loading}>
-                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Enregistrer
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
+                  <div className="space-y-2">
+                    <Label htmlFor="montant_ttc">Montant TTC (€)</Label>
+                    <Input
+                      id="montant_ttc"
+                      type="number"
+                      step="0.01"
+                      value={formData.montant_ttc.toFixed(2)}
+                      readOnly
+                      className="bg-muted"
+                    />
+                  </div>
+                </div>
+
+                <DialogFooter className="mt-6">
+                  <Button type="submit" disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Créer le devis
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
           </Dialog>
         </div>
       </CardHeader>
 
       <CardContent>
-        {devis ? (
+        {devisList.length > 0 ? (
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Montant HT</p>
-                <p className="text-xl font-bold">{devis.montant_ht.toLocaleString()} €</p>
+            {/* KPI - Devis actif */}
+            {devisActif && (
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">💰 Devis actif ({devisActif.version})</p>
+                    <p className="text-2xl font-bold">{devisActif.montant_ttc?.toLocaleString() || 0} € TTC</p>
+                  </div>
+                  <Badge className="bg-primary text-primary-foreground">ACTIF</Badge>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">TVA</p>
-                <p className="text-xl font-bold">{devis.tva}%</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Montant TTC</p>
-                <p className="text-xl font-bold">{devis.montant_ttc.toLocaleString()} €</p>
-              </div>
-            </div>
-
-            {devis.fichier_url && (
-              <Button variant="outline" asChild>
-                <a href={devis.fichier_url} target="_blank" rel="noopener noreferrer">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Voir le fichier
-                </a>
-              </Button>
             )}
+
+            {/* Tableau des devis */}
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Version</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Montant HT</TableHead>
+                  <TableHead>TVA</TableHead>
+                  <TableHead>Montant TTC</TableHead>
+                  <TableHead>Créé le</TableHead>
+                  <TableHead>Actif</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {devisList.map((d) => (
+                  <TableRow key={d.id}>
+                    <TableCell className="font-medium">{d.version}</TableCell>
+                    <TableCell>{getStatutBadge(d.statut)}</TableCell>
+                    <TableCell>{d.montant_ht?.toFixed(2)} €</TableCell>
+                    <TableCell>{d.tva}%</TableCell>
+                    <TableCell className="font-bold">{d.montant_ttc?.toFixed(2)} €</TableCell>
+                    <TableCell>{new Date(d.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant={d.actif ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => !d.actif && handleToggleActif(d.id)}
+                        disabled={d.actif}
+                      >
+                        {d.actif ? <CheckCircle2 className="h-4 w-4" /> : "Activer"}
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      {d.fichier_url && (
+                        <Button variant="ghost" size="sm" asChild>
+                          <a href={d.fichier_url} target="_blank" rel="noopener noreferrer">
+                            <FileText className="h-4 w-4" />
+                          </a>
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         ) : (
-          <p className="text-muted-foreground text-center py-8">
-            Aucun devis enregistré. Cliquez sur "Ajouter" pour commencer.
-          </p>
+          <div className="text-center py-12">
+            <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+            <p className="text-lg font-semibold text-muted-foreground mb-2">
+              Aucun devis enregistré
+            </p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Créez votre premier devis pour commencer à suivre la rentabilité du chantier
+            </p>
+          </div>
         )}
       </CardContent>
     </Card>

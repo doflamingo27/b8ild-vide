@@ -1,12 +1,29 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export async function saveExtraction(
-  table: 'factures_fournisseurs' | 'frais_chantier' | 'tenders',
+  table: 'factures_fournisseurs' | 'frais_chantier' | 'tenders' | 'devis',
   entrepriseId: string,
   payload: any
 ): Promise<string> {
   try {
     console.log('[saveExtraction]', { table, entrepriseId, payload });
+    
+    // ✅ Utiliser la fonction RPC dédiée pour les devis
+    if (table === 'devis') {
+      const { data, error } = await supabase.rpc('insert_devis_extraction', {
+        p_entreprise_id: entrepriseId,
+        p_chantier_id: payload.chantier_id,
+        p_data: payload,
+      });
+      
+      if (error) {
+        console.error('[saveExtraction] RPC error (devis):', error);
+        throw error;
+      }
+      
+      console.log('[saveExtraction] Success (devis):', data);
+      return data as string;
+    }
     
     const { data, error } = await supabase.rpc('insert_extraction_service', {
       p_table: table,

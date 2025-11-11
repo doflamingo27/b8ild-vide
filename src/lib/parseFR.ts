@@ -60,11 +60,14 @@ function extractAmountsWithContext(text: string) {
   return result;
 }
 
-export function parseFrenchDocument(text: string, module: 'factures' | 'frais' | 'ao') {
+export function parseFrenchDocument(
+  text: string,
+  module: 'factures' | 'frais' | 'ao' | 'devis'
+): any {
   const fields: any = {};
 
-  // Extraction factures/frais
-  if (module === 'factures' || module === 'frais') {
+  // Extraction factures/frais/devis
+  if (module === 'factures' || module === 'frais' || module === 'devis') {
     // Extraction par proximité (formats tabulaires)
     const proximityExtraction = extractAmountsWithContext(text);
     console.log('[parseFR] Extraction par proximité:', proximityExtraction);
