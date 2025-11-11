@@ -110,8 +110,10 @@ export function parseFrenchDocument(
     fields.ht = htRegexFallback ?? proximityExtraction.ht;
 
     console.log('[parseFR] HT matches trouvés:', allHtMatches.length);
+    console.log('[parseFR] Tous les HT capturés:', allHtMatches);
+    console.log('[parseFR] htRegexFallback (dernier):', htRegexFallback);
     if (fields.ht) {
-      console.log('[parseFR] HT final extrait:', fields.ht, '(source:', proximityExtraction.ht ? 'proximité' : 'regex dernier match', ')');
+      console.log('[parseFR] HT final extrait:', fields.ht, '(source:', htRegexFallback ? 'regex dernier match' : 'proximité', ')');
     }
 
     // NET à payer
@@ -126,8 +128,10 @@ export function parseFrenchDocument(
     fields.ttc = ttcRegexFallback ?? proximityExtraction.ttc;
 
     console.log('[parseFR] TTC matches trouvés:', allTtcMatches.length);
+    console.log('[parseFR] Tous les TTC capturés:', allTtcMatches);
+    console.log('[parseFR] ttcRegexFallback (dernier):', ttcRegexFallback);
     if (fields.ttc) {
-      console.log('[parseFR] TTC final extrait:', fields.ttc, '(source:', proximityExtraction.ttc ? 'proximité' : 'regex dernier match', ')');
+      console.log('[parseFR] TTC final extrait:', fields.ttc, '(source:', ttcRegexFallback ? 'regex dernier match' : 'proximité', ')');
     }
 
     // TVA montant : NE PAS extraire ici, sera recalculé plus tard pour garantir cohérence
