@@ -161,18 +161,18 @@ export function parseFrenchDocument(text: string, module: 'factures' | 'frais' |
       console.log('[parseFR] HT recalculé:', fields.ht);
     }
 
-    // Recalculer TOUJOURS le montant de TVA pour garantir la cohérence
-    if (fields.ht && fields.tvaPct) {
-      const expectedTvaAmt = fields.ht * (fields.tvaPct / 100);
-      console.log('[parseFR] Montant TVA recalculé:', expectedTvaAmt, '(HT:', fields.ht, '× TVA%:', fields.tvaPct, ')');
-      fields.tvaAmt = expectedTvaAmt;
-    }
-
-    // Vérifier cohérence HT/TTC (si HT >= TTC, probable erreur)
+    // Vérifier cohérence HT/TTC (si HT >= TTC, probable erreur) - AVANT le calcul de TVA
     if (fields.ht && fields.ttc && fields.ht >= fields.ttc) {
       console.warn('[parseFR] HT >= TTC détecté, inversion probable !');
       [fields.ht, fields.ttc] = [fields.ttc, fields.ht];
       console.log('[parseFR] Montants inversés:', { ht: fields.ht, ttc: fields.ttc });
+    }
+
+    // Recalculer TOUJOURS le montant de TVA pour garantir la cohérence (APRÈS l'inversion)
+    if (fields.ht && fields.tvaPct) {
+      const expectedTvaAmt = fields.ht * (fields.tvaPct / 100);
+      console.log('[parseFR] Montant TVA recalculé:', expectedTvaAmt, '(HT:', fields.ht, '× TVA%:', fields.tvaPct, ')');
+      fields.tvaAmt = expectedTvaAmt;
     }
 
     // Vérification cohérence finale
