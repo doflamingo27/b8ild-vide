@@ -22,26 +22,35 @@ function extractAmountsWithContext(text: string) {
   const tvaAmtIndex = text.search(/t\.?v\.?a\.?\s*(?:à|a)?\s*\d{1,2}\s*%/i);
   
   const result: any = {};
+  const usedIndices = new Set<number>(); // Tracker les montants déjà utilisés
   
   if (htIndex >= 0) {
     const closest = amounts.reduce((prev, curr) => 
       Math.abs(curr.index - htIndex) < Math.abs(prev.index - htIndex) ? curr : prev
     );
     result.ht = normalizeNumberFR(closest.value);
+    usedIndices.add(closest.index);
   }
   
   if (ttcIndex >= 0) {
-    const closest = amounts.reduce((prev, curr) => 
-      Math.abs(curr.index - ttcIndex) < Math.abs(prev.index - ttcIndex) ? curr : prev
-    );
-    result.ttc = normalizeNumberFR(closest.value);
+    const availableAmounts = amounts.filter(a => !usedIndices.has(a.index));
+    if (availableAmounts.length > 0) {
+      const closest = availableAmounts.reduce((prev, curr) => 
+        Math.abs(curr.index - ttcIndex) < Math.abs(prev.index - ttcIndex) ? curr : prev
+      );
+      result.ttc = normalizeNumberFR(closest.value);
+      usedIndices.add(closest.index);
+    }
   }
   
   if (tvaAmtIndex >= 0) {
-    const closest = amounts.reduce((prev, curr) => 
-      Math.abs(curr.index - tvaAmtIndex) < Math.abs(prev.index - tvaAmtIndex) ? curr : prev
-    );
-    result.tvaAmt = normalizeNumberFR(closest.value);
+    const availableAmounts = amounts.filter(a => !usedIndices.has(a.index));
+    if (availableAmounts.length > 0) {
+      const closest = availableAmounts.reduce((prev, curr) => 
+        Math.abs(curr.index - tvaAmtIndex) < Math.abs(prev.index - tvaAmtIndex) ? curr : prev
+      );
+      result.tvaAmt = normalizeNumberFR(closest.value);
+    }
   }
   
   return result;
@@ -153,6 +162,27 @@ export function parseFrenchDocument(text: string, module: 'factures' | 'frais' |
       console.warn('[parseFR] HT >= TTC détecté, inversion probable !');
       [fields.ht, fields.ttc] = [fields.ttc, fields.ht];
       console.log('[parseFR] Montants inversés:', { ht: fields.ht, ttc: fields.ttc });
+    }
+
+    // Recalcul automatique du montant de TVA (plus fiable que l'extraction OCR)
+    if (fields.ht && fields.tvaPct && !fields.tvaAmt) {
+      fields.tvaAmt = fields.ht * (fields.tvaPct / 100);
+      console.log('[parseFR] Montant TVA recalculé:', fields.tvaAmt);
+    }
+
+    // Correction si tvaAmt extrait semble incorrect
+    if (fields.ht && fields.tvaPct && fields.tvaAmt) {
+      const expectedTvaAmt = fields.ht * (fields.tvaPct / 100);
+      const tolerance = 0.02; // Tolérance de 2%
+      
+      if (Math.abs(fields.tvaAmt - expectedTvaAmt) / expectedTvaAmt > tolerance) {
+        console.warn('[parseFR] Montant TVA incohérent détecté:', {
+          extrait: fields.tvaAmt,
+          attendu: expectedTvaAmt
+        });
+        fields.tvaAmt = expectedTvaAmt;
+        console.log('[parseFR] Montant TVA corrigé:', fields.tvaAmt);
+      }
     }
 
     // Vérification cohérence finale
