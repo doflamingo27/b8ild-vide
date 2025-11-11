@@ -395,7 +395,7 @@ const Projects = () => {
               rentabilite={0}
               jours_restants={project.duree_estimee}
               etat_chantier={project.etat_chantier}
-              onEdit={handleEditState}
+              onEdit={() => handleEditState(project)}
             />
           ))}
         </div>

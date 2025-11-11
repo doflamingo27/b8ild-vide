@@ -41,6 +41,7 @@ const Header = () => {
     { path: "/team", label: labels.nav.team, icon: Users },
     { path: "/projects", label: labels.nav.projects, icon: FolderKanban },
     { path: "/rentabilite", label: "Rentabilité", icon: DollarSign },
+    { path: "/financial", label: "Gestion financière", icon: DollarSign },
     { path: "/reports", label: labels.nav.reports, icon: FileText },
     { path: "/profile", label: labels.nav.profile, icon: User },
     { path: "/subscription", label: labels.nav.billing, icon: CreditCard },
