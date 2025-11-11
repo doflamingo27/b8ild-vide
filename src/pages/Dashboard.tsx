@@ -217,132 +217,7 @@ const Dashboard = () => {
       </div>
 
       {/* Actions rapides */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
-              <CardHeader className="flex flex-row items-center gap-4">
-                <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                  <Plus className="h-8 w-8 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl">Créer un nouveau chantier</CardTitle>
-                  <CardDescription>Démarrez un nouveau projet</CardDescription>
-                </div>
-              </CardHeader>
-            </Card>
-          </DialogTrigger>
-          <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
-            <form onSubmit={handleSubmit}>
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-black">Créer un nouveau chantier</DialogTitle>
-                <DialogDescription className="text-base">
-                  Renseignez les informations du chantier
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nom_chantier" className="font-semibold">{labels.forms.projectName}</Label>
-                  <Input
-                    id="nom_chantier"
-                    value={formData.nom_chantier}
-                    onChange={(e) => setFormData({ ...formData, nom_chantier: e.target.value })}
-                    placeholder={placeholders.project.name}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="client" className="font-semibold">{labels.forms.projectClient}</Label>
-                  <Input
-                    id="client"
-                    value={formData.client}
-                    onChange={(e) => setFormData({ ...formData, client: e.target.value })}
-                    placeholder={placeholders.project.client}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="adresse" className="font-semibold">{labels.forms.projectAddress}</Label>
-                  <Input
-                    id="adresse"
-                    value={formData.adresse}
-                    onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
-                    placeholder={placeholders.project.address}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="duree_estimee_jours" className="font-semibold">{labels.forms.projectDuration}</Label>
-                  <Input
-                    id="duree_estimee_jours"
-                    type="number"
-                    value={formData.duree_estimee_jours}
-                    onChange={(e) => setFormData({ ...formData, duree_estimee_jours: parseInt(e.target.value) })}
-                    placeholder={placeholders.project.duration}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description" className="font-semibold">{labels.forms.projectDescription}</Label>
-                  <Input
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Détails du chantier..."
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="etat_chantier" className="font-semibold">État du chantier *</Label>
-                  <Select
-                    value={formData.etat_chantier}
-                    onValueChange={(value) => setFormData({ ...formData, etat_chantier: value })}
-                  >
-                    <SelectTrigger id="etat_chantier">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="brouillon">📝 Brouillon</SelectItem>
-                      <SelectItem value="projection">🔮 Projection</SelectItem>
-                      <SelectItem value="attente_signature">✍️ En attente de signature</SelectItem>
-                      <SelectItem value="en_cours">🚧 En cours</SelectItem>
-                      <SelectItem value="suspendu">⏸️ Suspendu</SelectItem>
-                      <SelectItem value="termine">✅ Terminé</SelectItem>
-                      <SelectItem value="annule">❌ Annulé</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="date_debut_prevue" className="font-semibold">Date de début prévue</Label>
-                    <Input
-                      id="date_debut_prevue"
-                      type="date"
-                      value={formData.date_debut_prevue}
-                      onChange={(e) => setFormData({ ...formData, date_debut_prevue: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="date_fin_estimee" className="font-semibold">Date de fin estimée</Label>
-                    <Input
-                      id="date_fin_estimee"
-                      type="date"
-                      value={formData.date_fin_estimee}
-                      onChange={(e) => setFormData({ ...formData, date_fin_estimee: e.target.value })}
-                    />
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={loading} size="lg" className="font-bold">
-                  Créer le chantier
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-
+      <div className="grid gap-4 md:grid-cols-1">
         <Card className="hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => navigate("/import/facture")}>
           <CardHeader className="flex flex-row items-center gap-4">
             <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
@@ -359,9 +234,128 @@ const Dashboard = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-black">Chantiers récents</h2>
-          <Button variant="default" size="sm" asChild>
-            <Link to="/projects">Voir tous</Link>
-          </Button>
+          <div className="flex gap-2">
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Nouveau chantier
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+                <form onSubmit={handleSubmit}>
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-black">Créer un nouveau chantier</DialogTitle>
+                    <DialogDescription className="text-base">
+                      Renseignez les informations du chantier
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="nom_chantier" className="font-semibold">{labels.forms.projectName}</Label>
+                      <Input
+                        id="nom_chantier"
+                        value={formData.nom_chantier}
+                        onChange={(e) => setFormData({ ...formData, nom_chantier: e.target.value })}
+                        placeholder={placeholders.project.name}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="client" className="font-semibold">{labels.forms.projectClient}</Label>
+                      <Input
+                        id="client"
+                        value={formData.client}
+                        onChange={(e) => setFormData({ ...formData, client: e.target.value })}
+                        placeholder={placeholders.project.client}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="adresse" className="font-semibold">{labels.forms.projectAddress}</Label>
+                      <Input
+                        id="adresse"
+                        value={formData.adresse}
+                        onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
+                        placeholder={placeholders.project.address}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="duree_estimee_jours" className="font-semibold">{labels.forms.projectDuration}</Label>
+                      <Input
+                        id="duree_estimee_jours"
+                        type="number"
+                        value={formData.duree_estimee_jours}
+                        onChange={(e) => setFormData({ ...formData, duree_estimee_jours: parseInt(e.target.value) })}
+                        placeholder={placeholders.project.duration}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="description" className="font-semibold">{labels.forms.projectDescription}</Label>
+                      <Input
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        placeholder="Détails du chantier..."
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="etat_chantier" className="font-semibold">État du chantier *</Label>
+                      <Select
+                        value={formData.etat_chantier}
+                        onValueChange={(value) => setFormData({ ...formData, etat_chantier: value })}
+                      >
+                        <SelectTrigger id="etat_chantier">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="brouillon">📝 Brouillon</SelectItem>
+                          <SelectItem value="projection">🔮 Projection</SelectItem>
+                          <SelectItem value="attente_signature">✍️ En attente de signature</SelectItem>
+                          <SelectItem value="en_cours">🚧 En cours</SelectItem>
+                          <SelectItem value="suspendu">⏸️ Suspendu</SelectItem>
+                          <SelectItem value="termine">✅ Terminé</SelectItem>
+                          <SelectItem value="annule">❌ Annulé</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="date_debut_prevue" className="font-semibold">Date de début prévue</Label>
+                        <Input
+                          id="date_debut_prevue"
+                          type="date"
+                          value={formData.date_debut_prevue}
+                          onChange={(e) => setFormData({ ...formData, date_debut_prevue: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="date_fin_estimee" className="font-semibold">Date de fin estimée</Label>
+                        <Input
+                          id="date_fin_estimee"
+                          type="date"
+                          value={formData.date_fin_estimee}
+                          onChange={(e) => setFormData({ ...formData, date_fin_estimee: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit" disabled={loading} size="lg" className="font-bold">
+                      Créer le chantier
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+            <Button variant="default" size="sm" asChild>
+              <Link to="/projects">Voir tous</Link>
+            </Button>
+          </div>
         </div>
         
         {recentProjects.length === 0 ? (
