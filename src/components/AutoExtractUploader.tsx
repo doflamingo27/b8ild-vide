@@ -32,21 +32,14 @@ export default function AutoExtractUploader({ module, entrepriseId, chantierId, 
     setSavedId(null);
 
     try {
-      console.log('[AutoExtractUploader] ========================================');
-      console.log('[AutoExtractUploader] Début extraction:', file.name);
-      console.log('[AutoExtractUploader] Module:', module);
+      console.log('[OCR] Starting extraction with OCR.space...', { module, file: file.name });
       
       // 1️⃣ OCR.space
       const { text, confidence: ocrConfidence, provider } = await extractWithOcrSpace(file);
-      console.log('[AutoExtractUploader] OCR confidence:', ocrConfidence);
-      console.log('[AutoExtractUploader] Texte OCR (premiers 800 caractères):', text.substring(0, 800));
+      console.log('[OCR] Success:', { provider, textLength: text.length, ocrConfidence });
 
       // 2️⃣ Parser français
-      console.log('[AutoExtractUploader] ===== PARSING AVEC parseFR =====');
       const fields = parseFrenchDocument(text, module);
-      console.log('[AutoExtractUploader] ===== CHAMPS EXTRAITS PAR parseFR =====');
-      console.log('[AutoExtractUploader] Champs extraits:', JSON.stringify(fields, null, 2));
-      console.log('[AutoExtractUploader] =========================================');
       
       // Debug: Afficher texte OCR brut (1000 premiers caractères)
       console.log('[Parser] Raw OCR text (first 1000 chars):', text.substring(0, 1000));
@@ -207,30 +200,10 @@ export default function AutoExtractUploader({ module, entrepriseId, chantierId, 
         };
       }
 
-      // ✅ Alerte visuelle si extraction suspecte détectée
-      if (module === 'factures' || module === 'devis') {
-        if (fields.ht && fields.ttc) {
-          const ratio = fields.ttc / fields.ht;
-          if (ratio < 1.0 || ratio > 1.5) {
-            toast({
-              variant: "destructive",
-              title: "⚠️ Extraction suspecte détectée",
-              description: `Le TTC (${fields.ttc}€) semble incohérent avec le HT (${fields.ht}€). Vérifiez les valeurs extraites.`,
-            });
-          }
-        }
-      }
-
       // 5️⃣ Sauvegarde DB
-      console.log('[AutoExtractUploader] ===== PAYLOAD FINAL ENVOYÉ À LA DB =====');
-      console.log('[AutoExtractUploader] Table:', table);
-      console.log('[AutoExtractUploader] Payload:', JSON.stringify(payload, null, 2));
-      console.log('[AutoExtractUploader] =============================================');
-      
+      console.log('[AutoExtract] Saving to DB:', { table, payload });
       const id = await saveExtraction(table, entrepriseId, payload);
-      
-      console.log('[AutoExtractUploader] ✅ Extraction enregistrée avec succès:', id);
-      console.log('[AutoExtractUploader] ========================================');
+      console.log('[AutoExtract] Saved with ID:', id);
 
       setSavedId(id);
       setExtraction({ fields, confidence: finalConfidence });
