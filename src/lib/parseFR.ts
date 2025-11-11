@@ -101,26 +101,59 @@ export function parseFrenchDocument(
     console.log('[parseFR] Extraction par proximité:', proximityExtraction);
     console.log('[parseFR] ========================================');
 
-    // ✅ Priorité 1 : Format tableau récapitulatif avec pipes
-    R.RECAP_HT.lastIndex = 0;
-    const recapHtMatch = R.RECAP_HT.exec(text);
-    if (recapHtMatch?.[1]) {
-      fields.ht = normalizeNumberFR(recapHtMatch[1]);
-      console.log('[parseFR] ✅ HT extrait depuis tableau récapitulatif:', fields.ht);
+    // ✅ DIAGNOSTIC : Tracer TOUS les matches trouvés dans le document
+    console.log('[parseFR] ===== DIAGNOSTIC COMPLET DES MONTANTS =====');
+    
+    const allRecapHtMatches = Array.from(text.matchAll(R.RECAP_HT));
+    console.log(`[parseFR] Nombre de matches RECAP_HT trouvés : ${allRecapHtMatches.length}`);
+    allRecapHtMatches.forEach((match, idx) => {
+      const normalized = normalizeNumberFR(match[1]);
+      const position = ((match.index || 0) / text.length * 100).toFixed(1);
+      console.log(`  [${idx + 1}] HT = ${normalized} € (position: ${position}%)`);
+    });
+
+    const allRecapTtcMatches = Array.from(text.matchAll(R.RECAP_TTC));
+    console.log(`[parseFR] Nombre de matches RECAP_TTC trouvés : ${allRecapTtcMatches.length}`);
+    allRecapTtcMatches.forEach((match, idx) => {
+      const normalized = normalizeNumberFR(match[1]);
+      const position = ((match.index || 0) / text.length * 100).toFixed(1);
+      console.log(`  [${idx + 1}] TTC = ${normalized} € (position: ${position}%)`);
+    });
+
+    console.log('[parseFR] ====================================');
+
+    // ✅ Priorité 1 : Format tableau récapitulatif - PRENDRE LE DERNIER MATCH
+    const recapHtMatches = Array.from(text.matchAll(R.RECAP_HT));
+    if (recapHtMatches.length > 0) {
+      const lastMatch = recapHtMatches[recapHtMatches.length - 1];
+      fields.ht = normalizeNumberFR(lastMatch[1]);
+      const matchPosition = lastMatch.index || 0;
+      const positionPercent = (matchPosition / text.length) * 100;
+      
+      console.log('[parseFR] ✅ HT extrait depuis tableau récapitulatif (DERNIER match):', fields.ht);
+      console.log('[parseFR] Position du HT extrait :', positionPercent.toFixed(1), '% du document');
+      
+      if (positionPercent < 50) {
+        console.warn('[parseFR] ⚠️ HT extrait trop tôt dans le document, probable sous-total');
+      }
     }
 
-    R.RECAP_TTC.lastIndex = 0;
-    const recapTtcMatch = R.RECAP_TTC.exec(text);
-    if (recapTtcMatch?.[1]) {
-      fields.ttc = normalizeNumberFR(recapTtcMatch[1]);
-      console.log('[parseFR] ✅ TTC extrait depuis tableau récapitulatif:', fields.ttc);
+    const recapTtcMatches = Array.from(text.matchAll(R.RECAP_TTC));
+    if (recapTtcMatches.length > 0) {
+      const lastMatch = recapTtcMatches[recapTtcMatches.length - 1];
+      fields.ttc = normalizeNumberFR(lastMatch[1]);
+      const matchPosition = lastMatch.index || 0;
+      const positionPercent = (matchPosition / text.length) * 100;
+      
+      console.log('[parseFR] ✅ TTC extrait depuis tableau récapitulatif (DERNIER match):', fields.ttc);
+      console.log('[parseFR] Position du TTC extrait :', positionPercent.toFixed(1), '% du document');
     }
 
-    R.RECAP_TVA.lastIndex = 0;
-    const recapTvaMatch = R.RECAP_TVA.exec(text);
-    if (recapTvaMatch) {
-      fields.tvaPct = normalizePercentFR(recapTvaMatch[1]);
-      console.log('[parseFR] ✅ TVA% extrait depuis tableau récapitulatif:', fields.tvaPct);
+    const recapTvaMatches = Array.from(text.matchAll(R.RECAP_TVA));
+    if (recapTvaMatches.length > 0) {
+      const lastMatch = recapTvaMatches[recapTvaMatches.length - 1];
+      fields.tvaPct = normalizePercentFR(lastMatch[1]);
+      console.log('[parseFR] ✅ TVA% extrait depuis tableau récapitulatif (DERNIER match):', fields.tvaPct);
     }
 
     // ✅ Priorité 2 : Extraction par proximité (si pas trouvé en tableau)
@@ -140,23 +173,37 @@ export function parseFrenchDocument(
       }
     }
 
-    // ✅ Priorité 4 : Extraction HT par regex générique (fallback final)
+    // ✅ Priorité 4 : Extraction HT par regex générique - DERNIER MATCH
     if (!fields.ht) {
-      R.HT.lastIndex = 0;
-      const htMatch = R.HT.exec(text);
-      if (htMatch?.[1]) {
-        fields.ht = normalizeNumberFR(htMatch[1]);
-        console.log('[parseFR] HT extrait par regex générique:', fields.ht);
+      const htMatches = Array.from(text.matchAll(R.HT));
+      if (htMatches.length > 0) {
+        const lastMatch = htMatches[htMatches.length - 1];
+        fields.ht = normalizeNumberFR(lastMatch[1]);
+        const matchPosition = lastMatch.index || 0;
+        const positionPercent = (matchPosition / text.length) * 100;
+        
+        console.log('[parseFR] HT extrait par regex générique (DERNIER match):', fields.ht);
+        console.log('[parseFR] Nombre de matches HT trouvés:', htMatches.length);
+        console.log('[parseFR] Position du HT extrait :', positionPercent.toFixed(1), '% du document');
+        
+        if (positionPercent < 50) {
+          console.warn('[parseFR] ⚠️ HT extrait trop tôt dans le document, probable sous-total');
+        }
       }
     }
 
-    // ✅ Extraction TTC par regex générique (fallback final)
+    // ✅ Extraction TTC par regex générique - DERNIER MATCH
     if (!fields.ttc) {
-      R.TTC.lastIndex = 0;
-      const ttcMatch = R.TTC.exec(text);
-      if (ttcMatch?.[1]) {
-        fields.ttc = normalizeNumberFR(ttcMatch[1]);
-        console.log('[parseFR] TTC extrait par regex générique:', fields.ttc);
+      const ttcMatches = Array.from(text.matchAll(R.TTC));
+      if (ttcMatches.length > 0) {
+        const lastMatch = ttcMatches[ttcMatches.length - 1];
+        fields.ttc = normalizeNumberFR(lastMatch[1]);
+        const matchPosition = lastMatch.index || 0;
+        const positionPercent = (matchPosition / text.length) * 100;
+        
+        console.log('[parseFR] TTC extrait par regex générique (DERNIER match):', fields.ttc);
+        console.log('[parseFR] Nombre de matches TTC trouvés:', ttcMatches.length);
+        console.log('[parseFR] Position du TTC extrait :', positionPercent.toFixed(1), '% du document');
       }
     }
 
