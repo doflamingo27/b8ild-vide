@@ -27,7 +27,7 @@ const Projects = () => {
     nom_chantier: "",
     client: "",
     adresse: "",
-    duree_estimee: 30,
+    duree_estimee_jours: 30,
     description: "",
     etat_chantier: "brouillon",
     date_debut_prevue: new Date().toISOString().split('T')[0],
@@ -118,7 +118,7 @@ const Projects = () => {
         nom_chantier: "",
         client: "",
         adresse: "",
-        duree_estimee: 30,
+        duree_estimee_jours: 30,
         description: "",
         etat_chantier: "brouillon",
         date_debut_prevue: new Date().toISOString().split('T')[0],
@@ -247,12 +247,12 @@ const Projects = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="duree_estimee" className="font-semibold">{labels.forms.projectDuration}</Label>
+                  <Label htmlFor="duree_estimee_jours" className="font-semibold">{labels.forms.projectDuration}</Label>
                   <Input
-                    id="duree_estimee"
+                    id="duree_estimee_jours"
                     type="number"
-                    value={formData.duree_estimee}
-                    onChange={(e) => setFormData({ ...formData, duree_estimee: parseInt(e.target.value) })}
+                    value={formData.duree_estimee_jours}
+                    onChange={(e) => setFormData({ ...formData, duree_estimee_jours: parseInt(e.target.value) })}
                     placeholder={placeholders.project.duration}
                     required
                     aria-label={labels.forms.projectDuration}
