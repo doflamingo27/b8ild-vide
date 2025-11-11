@@ -24,18 +24,23 @@ const ExpensesManager = ({ chantierId, frais, onUpdate }: ExpensesManagerProps) 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    type_frais: "Repas",
+    type_frais: "Autre",
     montant_total: 0,
     description: "",
     date_frais: new Date().toISOString().split('T')[0],
   });
 
-  const typeFrais = [
-    "Repas",
-    "Déplacement",
-    "Hébergement",
-    "Matériel",
-    "Autre",
+  const expenseCategories = [
+    { value: "Location de véhicule", label: "Location de véhicule", icon: "🚗" },
+    { value: "Achat d'outillage", label: "Achat d'outillage", icon: "🔧" },
+    { value: "Location d'outillage", label: "Location d'outillage", icon: "🔨" },
+    { value: "Consommables", label: "Consommables", icon: "🍞" },
+    { value: "Frais de déplacement", label: "Frais de déplacement", icon: "🚗" },
+    { value: "Frais d'hébergement", label: "Frais d'hébergement", icon: "🏠" },
+    { value: "Assurance", label: "Assurance", icon: "🛡️" },
+    { value: "Permis & autorisations", label: "Permis & autorisations", icon: "📄" },
+    { value: "Sous-traitant", label: "Sous-traitant", icon: "👷" },
+    { value: "Autre", label: "Autre", icon: "🔥" },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,7 +79,7 @@ const ExpensesManager = ({ chantierId, frais, onUpdate }: ExpensesManagerProps) 
 
       setOpen(false);
       setFormData({
-        type_frais: "Repas",
+        type_frais: "Autre",
         montant_total: 0,
         description: "",
         date_frais: new Date().toISOString().split('T')[0],
@@ -123,7 +128,7 @@ const ExpensesManager = ({ chantierId, frais, onUpdate }: ExpensesManagerProps) 
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Frais supplémentaires</CardTitle>
+            <CardTitle>Coûts annexes</CardTitle>
             <CardDescription>
               Total : {totalFrais.toLocaleString()} €
             </CardDescription>
@@ -132,21 +137,21 @@ const ExpensesManager = ({ chantierId, frais, onUpdate }: ExpensesManagerProps) 
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Ajouter des frais
+                Nouvelle dépense
               </Button>
             </DialogTrigger>
             <DialogContent>
               <form onSubmit={handleSubmit}>
                 <DialogHeader>
-                  <DialogTitle>Ajouter des frais</DialogTitle>
+                  <DialogTitle>Ajouter un coût annexe</DialogTitle>
                   <DialogDescription>
-                    Enregistrez les frais supplémentaires du chantier
+                    Enregistrez les coûts annexes du chantier
                   </DialogDescription>
                 </DialogHeader>
 
                 <div className="grid gap-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="type_frais">Type de frais</Label>
+                    <Label htmlFor="type_frais">Type de coût</Label>
                     <Select
                       value={formData.type_frais}
                       onValueChange={(value) => setFormData({ ...formData, type_frais: value })}
@@ -155,8 +160,10 @@ const ExpensesManager = ({ chantierId, frais, onUpdate }: ExpensesManagerProps) 
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {typeFrais.map((type) => (
-                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        {expenseCategories.map((cat) => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {cat.icon} {cat.label}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -223,30 +230,37 @@ const ExpensesManager = ({ chantierId, frais, onUpdate }: ExpensesManagerProps) 
               </TableRow>
             </TableHeader>
             <TableBody>
-              {frais.map((fraisItem) => (
-                <TableRow key={fraisItem.id}>
-                  <TableCell className="font-medium">{fraisItem.type_frais}</TableCell>
-                  <TableCell>{fraisItem.description || "-"}</TableCell>
-                  <TableCell>{new Date(fraisItem.date_frais).toLocaleDateString()}</TableCell>
-                  <TableCell className="text-right font-mono">
-                    {Number(fraisItem.montant_total).toLocaleString()} €
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleDelete(fraisItem.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {frais.map((fraisItem) => {
+                const category = expenseCategories.find(c => c.value === fraisItem.type_frais);
+                const icon = category?.icon || "🔥";
+                
+                return (
+                  <TableRow key={fraisItem.id}>
+                    <TableCell className="font-medium">
+                      {icon} {fraisItem.type_frais}
+                    </TableCell>
+                    <TableCell>{fraisItem.description || "-"}</TableCell>
+                    <TableCell>{new Date(fraisItem.date_frais).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-right font-mono">
+                      {Number(fraisItem.montant_total).toLocaleString()} €
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleDelete(fraisItem.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         ) : (
           <p className="text-muted-foreground text-center py-8">
-            Aucun frais enregistré. Cliquez sur "Ajouter" pour commencer.
+            Aucun coût annexe pour le moment. Cliquez sur "Nouvelle dépense" pour commencer.
           </p>
         )}
       </CardContent>

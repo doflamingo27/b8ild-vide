@@ -275,7 +275,7 @@ const InvoiceManager = ({ chantierId, factures, onUpdate }: InvoiceManagerProps)
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Factures Fournisseurs</CardTitle>
+              <CardTitle>Factures fournisseurs</CardTitle>
               <CardDescription>
                 {factures.length} facture{factures.length > 1 ? 's' : ''} enregistrée{factures.length > 1 ? 's' : ''}
               </CardDescription>
