@@ -1,13 +1,13 @@
 export function normalizeNumberFR(raw?: string | null): number | null {
   if (!raw) return null;
   
-  let s = String(raw)
-    .replace(/\u00A0/g, ' ')
+  // ✅ Supprimer TOUS les espaces Unicode + sauts de ligne AVANT la normalisation
+  const cleaned = String(raw)
+    .replace(/[\s\u00A0\u202F\u2009\n\r\t]/g, '') // Espaces insécables, tabs, newlines
     .replace(/€/g, '')
     .trim();
   
-  // Supprimer tous les espaces
-  s = s.replace(/\s+/g, '');
+  let s = cleaned;
   
   // Si contient à la fois . et , → . = milliers, , = décimale
   if (s.includes('.') && s.includes(',')) {
@@ -48,7 +48,7 @@ export function normalizeNumberFR(raw?: string | null): number | null {
   // Bornes sûres
   if (Math.abs(n) > 999999999999.99) return null;
   
-  return n;
+  return Math.round(n * 100) / 100;
 }
 
 export function normalizePercentFR(raw?: string | null): number | null {

@@ -1,59 +1,76 @@
 import { R } from '@/lib/extract/regexFR';
 import { normalizeNumberFR, normalizePercentFR, normalizeDateFR, checkTotals } from '@/lib/docai/normalize';
 
-// Extraction par proximité pour formats tabulaires
+// Extraction par proximité pour formats tabulaires (derniers 30% du document)
 function extractAmountsWithContext(text: string) {
+  // ✅ Analyser SEULEMENT la section récapitulative (derniers 30% du document)
+  const recapStartIndex = Math.floor(text.length * 0.7);
+  const recapText = text.substring(recapStartIndex);
+  
+  console.log('[extractAmounts] Analyse de la section récapitulative (derniers 30%)');
+  console.log('[extractAmounts] Position de départ:', recapStartIndex, '/', text.length);
+  console.log('[extractAmounts] Texte analysé (premiers 300 chars):', recapText.substring(0, 300));
+  
   const amountRegex = /([0-9\s]+[,\.]\d{2})\s*€/g;
   const amounts: Array<{value: string, index: number}> = [];
   let match;
   
-  while ((match = amountRegex.exec(text)) !== null) {
+  // ✅ Capturer les montants DANS la section récapitulative uniquement
+  while ((match = amountRegex.exec(recapText)) !== null) {
     amounts.push({
       value: match[1],
-      index: match.index
+      index: match.index + recapStartIndex // Ajuster l'index pour le document complet
     });
   }
   
+  console.log('[extractAmounts] Montants trouvés dans section récap:', amounts.length);
+  
   if (amounts.length === 0) return {};
   
-  // Amélioration : détecter HT dans formats tabulaires et variantes
-  const htIndex = text.search(/total\s*h\.?t\.?|total\s+hors\s+taxes?|base\s*h\.?t\.?|montant\s*h\.?t\.?/i);
-  const ttcIndex = text.search(/total\s*t\.?t\.?c\.?/i);
-  const tvaAmtIndex = text.search(/t\.?v\.?a\.?\s*(?:à|a)?\s*\d{1,2}\s*%/i);
+  // Chercher HT/TTC/TVA DANS la section récapitulative
+  const htIndex = recapText.search(/total\s*h\.?t\.?|total\s+hors\s+taxes?|base\s*h\.?t\.?|montant\s*h\.?t\.?/i);
+  const ttcIndex = recapText.search(/total\s*t\.?t\.?c\.?/i);
+  const tvaAmtIndex = recapText.search(/t\.?v\.?a\.?\s*(?:à|a)?\s*\d{1,2}\s*%/i);
   
   const result: any = {};
   const usedIndices = new Set<number>();
   
   if (htIndex >= 0) {
+    const realHtIndex = htIndex + recapStartIndex;
     const availableAmounts = amounts.filter(a => !usedIndices.has(a.index));
     if (availableAmounts.length > 0) {
       const closest = availableAmounts.reduce((prev, curr) => 
-        Math.abs(curr.index - htIndex) < Math.abs(prev.index - htIndex) ? curr : prev
+        Math.abs(curr.index - realHtIndex) < Math.abs(prev.index - realHtIndex) ? curr : prev
       );
       result.ht = normalizeNumberFR(closest.value);
       usedIndices.add(closest.index);
+      console.log('[extractAmounts] HT trouvé par proximité (section récap):', result.ht);
     }
   }
   
   if (ttcIndex >= 0) {
+    const realTtcIndex = ttcIndex + recapStartIndex;
     const availableAmounts = amounts.filter(a => !usedIndices.has(a.index));
     if (availableAmounts.length > 0) {
       const closest = availableAmounts.reduce((prev, curr) => 
-        Math.abs(curr.index - ttcIndex) < Math.abs(prev.index - ttcIndex) ? curr : prev
+        Math.abs(curr.index - realTtcIndex) < Math.abs(prev.index - realTtcIndex) ? curr : prev
       );
       result.ttc = normalizeNumberFR(closest.value);
       usedIndices.add(closest.index);
+      console.log('[extractAmounts] TTC trouvé par proximité (section récap):', result.ttc);
     }
   }
   
   if (tvaAmtIndex >= 0) {
+    const realTvaIndex = tvaAmtIndex + recapStartIndex;
     const availableAmounts = amounts.filter(a => !usedIndices.has(a.index));
     if (availableAmounts.length > 0) {
       const closest = availableAmounts.reduce((prev, curr) => 
-        Math.abs(curr.index - tvaAmtIndex) < Math.abs(prev.index - tvaAmtIndex) ? curr : prev
+        Math.abs(curr.index - realTvaIndex) < Math.abs(prev.index - realTvaIndex) ? curr : prev
       );
       result.tvaAmt = normalizeNumberFR(closest.value);
       usedIndices.add(closest.index);
+      console.log('[extractAmounts] TVA montant trouvé par proximité (section récap):', result.tvaAmt);
     }
   }
   
@@ -77,32 +94,31 @@ export function parseFrenchDocument(
     const tvaPctMatch = R.TVA_PCT.exec(text)?.[1];
     if (tvaPctMatch) fields.tvaPct = normalizePercentFR(tvaPctMatch);
 
-    // HT : priorité à la proximité, fallback regex
+    // HT : priorité 1 = proximité, priorité 2 = dernier match regex
     R.HT.lastIndex = 0;
-    const htMatch = R.HT.exec(text)?.[1];
-    fields.ht = proximityExtraction.ht ?? (htMatch ? normalizeNumberFR(htMatch) : null);
+    const allHtMatches = [...text.matchAll(R.HT)].map(m => normalizeNumberFR(m[1])).filter(n => n != null);
+    const htRegexFallback = allHtMatches.length > 0 ? allHtMatches[allHtMatches.length - 1] : null;
+    fields.ht = proximityExtraction.ht ?? htRegexFallback;
+
+    console.log('[parseFR] HT matches trouvés:', allHtMatches.length);
+    if (fields.ht) {
+      console.log('[parseFR] HT final extrait:', fields.ht, '(source:', proximityExtraction.ht ? 'proximité' : 'regex dernier match', ')');
+    }
 
     // NET à payer
     R.NET.lastIndex = 0;
     const netMatch = R.NET.exec(text)?.[1];
     if (netMatch) fields.net = normalizeNumberFR(netMatch);
 
-    // TTC : stratégie multi-match avec proximité
+    // TTC : priorité 1 = proximité, priorité 2 = dernier match regex
     R.TTC.lastIndex = 0;
-    const ttcMatches = [...text.matchAll(R.TTC)].map(m => normalizeNumberFR(m[1])).filter(n => n != null);
-    
-    if (proximityExtraction.ttc) {
-      fields.ttc = proximityExtraction.ttc;
-    } else if (ttcMatches.length > 0) {
-      if (fields.ht && fields.tvaPct) {
-        const expectedTTC = fields.ht * (1 + fields.tvaPct / 100);
-        const closestMatch = ttcMatches.reduce((prev, curr) =>
-          Math.abs(curr - expectedTTC) < Math.abs(prev - expectedTTC) ? curr : prev
-        );
-        fields.ttc = closestMatch;
-      } else {
-        fields.ttc = ttcMatches[0];
-      }
+    const allTtcMatches = [...text.matchAll(R.TTC)].map(m => normalizeNumberFR(m[1])).filter(n => n != null);
+    const ttcRegexFallback = allTtcMatches.length > 0 ? allTtcMatches[allTtcMatches.length - 1] : null;
+    fields.ttc = proximityExtraction.ttc ?? ttcRegexFallback;
+
+    console.log('[parseFR] TTC matches trouvés:', allTtcMatches.length);
+    if (fields.ttc) {
+      console.log('[parseFR] TTC final extrait:', fields.ttc, '(source:', proximityExtraction.ttc ? 'proximité' : 'regex dernier match', ')');
     }
 
     // TVA montant : NE PAS extraire ici, sera recalculé plus tard pour garantir cohérence
@@ -164,11 +180,24 @@ export function parseFrenchDocument(
       console.log('[parseFR] HT recalculé:', fields.ht);
     }
 
-    // Vérifier cohérence HT/TTC (si HT >= TTC, probable erreur) - AVANT le calcul de TVA
-    if (fields.ht && fields.ttc && fields.ht >= fields.ttc) {
-      console.warn('[parseFR] HT >= TTC détecté, inversion probable !');
-      [fields.ht, fields.ttc] = [fields.ttc, fields.ht];
-      console.log('[parseFR] Montants inversés:', { ht: fields.ht, ttc: fields.ttc });
+    // ✅ Validation stricte du ratio TTC/HT
+    if (fields.ht && fields.ttc) {
+      const ratio = fields.ttc / fields.ht;
+      
+      console.log('[parseFR] Ratio TTC/HT:', ratio.toFixed(3));
+      
+      // ✅ Validation stricte : ratio doit être entre 1.0 et 1.5 (TVA max ~50%)
+      if (ratio < 1.0 || ratio > 1.5) {
+        console.warn('[parseFR] ⚠️ Ratio TTC/HT anormal:', ratio.toFixed(3), '- Probable confusion HT/TTC');
+        
+        if (fields.ht >= fields.ttc) {
+          console.log('[parseFR] Inversion HT ↔ TTC détectée');
+          [fields.ht, fields.ttc] = [fields.ttc, fields.ht];
+        } else {
+          console.warn('[parseFR] Ratio > 1.5, extraction probablement incorrecte - Réinitialisation TTC');
+          fields.ttc = null; // Forcer le recalcul
+        }
+      }
     }
 
     // ✅ CALCUL OBLIGATOIRE du montant de TVA (APRÈS inversion HT/TTC)
