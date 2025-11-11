@@ -22,26 +22,39 @@ function extractAmountsWithContext(text: string) {
   const tvaAmtIndex = text.search(/t\.?v\.?a\.?\s*(?:à|a)?\s*\d{1,2}\s*%/i);
   
   const result: any = {};
+  const usedIndices = new Set<number>();
   
   if (htIndex >= 0) {
-    const closest = amounts.reduce((prev, curr) => 
-      Math.abs(curr.index - htIndex) < Math.abs(prev.index - htIndex) ? curr : prev
-    );
-    result.ht = normalizeNumberFR(closest.value);
+    const availableAmounts = amounts.filter(a => !usedIndices.has(a.index));
+    if (availableAmounts.length > 0) {
+      const closest = availableAmounts.reduce((prev, curr) => 
+        Math.abs(curr.index - htIndex) < Math.abs(prev.index - htIndex) ? curr : prev
+      );
+      result.ht = normalizeNumberFR(closest.value);
+      usedIndices.add(closest.index);
+    }
   }
   
   if (ttcIndex >= 0) {
-    const closest = amounts.reduce((prev, curr) => 
-      Math.abs(curr.index - ttcIndex) < Math.abs(prev.index - ttcIndex) ? curr : prev
-    );
-    result.ttc = normalizeNumberFR(closest.value);
+    const availableAmounts = amounts.filter(a => !usedIndices.has(a.index));
+    if (availableAmounts.length > 0) {
+      const closest = availableAmounts.reduce((prev, curr) => 
+        Math.abs(curr.index - ttcIndex) < Math.abs(prev.index - ttcIndex) ? curr : prev
+      );
+      result.ttc = normalizeNumberFR(closest.value);
+      usedIndices.add(closest.index);
+    }
   }
   
   if (tvaAmtIndex >= 0) {
-    const closest = amounts.reduce((prev, curr) => 
-      Math.abs(curr.index - tvaAmtIndex) < Math.abs(prev.index - tvaAmtIndex) ? curr : prev
-    );
-    result.tvaAmt = normalizeNumberFR(closest.value);
+    const availableAmounts = amounts.filter(a => !usedIndices.has(a.index));
+    if (availableAmounts.length > 0) {
+      const closest = availableAmounts.reduce((prev, curr) => 
+        Math.abs(curr.index - tvaAmtIndex) < Math.abs(prev.index - tvaAmtIndex) ? curr : prev
+      );
+      result.tvaAmt = normalizeNumberFR(closest.value);
+      usedIndices.add(closest.index);
+    }
   }
   
   return result;
