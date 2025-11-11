@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, TrendingUp, FileCheck, Search, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useCalculations } from "@/hooks/useCalculations";
 import ExportManager from "@/components/ExportManager";
 import EmptyState from "@/components/EmptyState";
 import { labels, emptyStates } from "@/lib/content";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const Reports = () => {
   const [chantiers, setChantiers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     loadChantiers();
@@ -54,16 +59,98 @@ const Reports = () => {
     }
   };
 
+  // Filtrer les chantiers par recherche
+  const filteredChantiers = chantiers.filter(chantier => 
+    chantier.nom_chantier.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    chantier.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (chantier.adresse || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Calculer les KPIs
+  const chantiersActifs = chantiers.filter(c => 
+    c.etat_chantier === 'en_cours' || c.etat_chantier === 'projection'
+  ).length;
+  const totalChantiers = chantiers.length;
+  const rapportsDisponibles = chantiers.filter(c => c.budget_ht > 0).length;
+
+  const handleExportAll = () => {
+    toast({
+      title: "Export en cours",
+      description: "Préparation de l'export de tous les rapports...",
+    });
+    // L'export individuel est géré par ExportManager dans chaque carte
+  };
+
   return (
     <div className="space-y-8 animate-fade-up">
       <div>
         <h1 className="text-4xl font-black text-gradient-primary flex items-center gap-3">
           <FileText className="h-9 w-9 text-primary" aria-hidden="true" />
-          {labels.nav.reports}
+          Rapports de Chantiers
         </h1>
         <p className="text-muted-foreground mt-2 text-lg">
-          Consultez et exportez vos rapports de chantiers
+          Analyse détaillée et simulation de rentabilité par chantier
         </p>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase">
+              Chantiers Actifs
+            </CardTitle>
+            <TrendingUp className="h-5 w-5 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-primary">{chantiersActifs}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              En cours d'exécution
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase">
+              Total Chantiers
+            </CardTitle>
+            <FileText className="h-5 w-5 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-blue-600">{totalChantiers}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Tous statuts confondus
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase">
+              Rapports Disponibles
+            </CardTitle>
+            <FileCheck className="h-5 w-5 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-green-600">{rapportsDisponibles}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Analyses complètes
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Barre de recherche */}
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" aria-hidden="true" />
+        <Input
+          placeholder="Rechercher un chantier..."
+          className="pl-12 h-12 text-base"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          aria-label="Rechercher un chantier"
+        />
       </div>
 
       <div className="grid gap-6">
@@ -74,18 +161,16 @@ const Reports = () => {
               <p className="text-muted-foreground font-medium">Chargement des rapports...</p>
             </CardContent>
           </Card>
-        ) : chantiers.length === 0 ? (
-          <EmptyState
-            icon={FileText}
-            title={emptyStates.reports.title}
-            text={emptyStates.reports.text}
-            primaryAction={{
-              label: emptyStates.reports.primary,
-              onClick: () => navigate("/projects"),
-            }}
-          />
+        ) : filteredChantiers.length === 0 ? (
+          <Card className="card-premium">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Search className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-xl font-semibold text-muted-foreground">Aucun chantier trouvé</p>
+              <p className="text-sm text-muted-foreground mt-2">Essayez avec d'autres mots-clés</p>
+            </CardContent>
+          </Card>
         ) : (
-          chantiers.map((chantier) => {
+          filteredChantiers.map((chantier) => {
             const membres = chantier.equipe_chantier?.map((ec: any) => ec.membres_equipe) || [];
             const devis = chantier.devis?.[0];
             const factures = chantier.factures_fournisseurs || [];
