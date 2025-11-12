@@ -13,6 +13,14 @@ const RealtimeProjectCard = ({ project, onEdit, onDelete }: RealtimeProjectCardP
   const rentabilite = metrics?.profitability_pct || 0;
   const joursRestants = metrics?.jours_restants_rentables ?? project.duree_estimee_jours;
 
+  console.log('[RealtimeProjectCard]', project.nom_chantier, {
+    loading,
+    hasMetrics: !!metrics,
+    rentabilite,
+    joursRestants,
+    rawMetrics: metrics
+  });
+
   return (
     <ProjectCard
       key={project.id}
