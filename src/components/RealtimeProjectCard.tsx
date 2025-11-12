@@ -14,14 +14,17 @@ const RealtimeProjectCard = ({ project, onEdit, onDelete }: RealtimeProjectCardP
 
   const rentabilite = metrics?.profitability_pct || 0;
   const joursRestants = metrics?.jours_restants_rentables ?? project.duree_estimee_jours;
+  const budgetDevis = metrics?.budget_ht || 0;
+  const coutsEngages = (metrics?.couts_fixes_engages || 0) + (metrics?.cout_main_oeuvre_reel || 0);
 
   console.log('[📊 RealtimeProjectCard DATA v2]', project.nom_chantier, {
     loading,
     hasMetrics: !!metrics,
     rentabilite,
     joursRestants,
-    jours_restants_db: metrics?.jours_restants_rentables,
-    duree_estimee: project.duree_estimee_jours
+    budgetDevis,
+    coutsEngages,
+    progressPct: budgetDevis > 0 ? ((coutsEngages / budgetDevis) * 100).toFixed(1) : 0
   });
 
   return (
@@ -32,6 +35,8 @@ const RealtimeProjectCard = ({ project, onEdit, onDelete }: RealtimeProjectCardP
       client={project.client}
       rentabilite={rentabilite}
       jours_restants={joursRestants}
+      budget_devis={budgetDevis}
+      couts_engages={coutsEngages}
       etat_chantier={project.etat_chantier}
       onEdit={onEdit}
       onDelete={onDelete}
