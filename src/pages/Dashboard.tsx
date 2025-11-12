@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import KPICard from "@/components/KPICard";
-import ProjectCard from "@/components/ProjectCard";
+import RealtimeProjectCard from "@/components/RealtimeProjectCard";
 import EmptyState from "@/components/EmptyState";
 import { TrendingUp, Users, AlertTriangle, Building, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -268,7 +268,7 @@ const Dashboard = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="date_debut_prevue" className="font-semibold">Date de début prévue *</Label>
+                        <Label htmlFor="date_debut_prevue" className="font-semibold">Date de début *</Label>
                         <Input
                           id="date_debut_prevue"
                           type="date"
@@ -372,29 +372,19 @@ const Dashboard = () => {
           />
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {recentProjects.map((project) => {
-              const rentabilite = project.rentabilite || 0;
-              const joursRestants = project.jours_restants || project.duree_estimee;
-              
-              return (
-                <ProjectCard
-                  key={project.id}
-                  id={project.id}
-                  nom_chantier={project.nom_chantier}
-                  client={project.client}
-                  rentabilite={rentabilite}
-                  jours_restants={joursRestants}
-                  etat_chantier={project.etat_chantier}
-                  onEdit={(id) => navigate(`/projects/${id}`)}
-                  onDelete={async (id) => {
-                    if (confirm("Êtes-vous sûr de vouloir supprimer ce chantier ?")) {
-                      await supabase.from("chantiers").delete().eq("id", id);
-                      loadDashboardData();
-                    }
-                  }}
-                />
-              );
-            })}
+            {recentProjects.map((project) => (
+              <RealtimeProjectCard
+                key={project.id}
+                project={project}
+                onEdit={(id) => navigate(`/projects/${id}`)}
+                onDelete={async (id) => {
+                  if (confirm("Êtes-vous sûr de vouloir supprimer ce chantier ?")) {
+                    await supabase.from("chantiers").delete().eq("id", id);
+                    loadDashboardData();
+                  }
+                }}
+              />
+            ))}
           </div>
         )}
       </div>
