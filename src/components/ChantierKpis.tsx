@@ -2,25 +2,16 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, TrendingUp, TrendingDown, AlertTriangle, Calendar, Euro, Clock } from "lucide-react";
 import { ChantierMetrics } from "@/hooks/useChantierMetrics";
+import { getRentabilityBadge } from "@/lib/rentabilityBadge";
 
 interface ChantierKpisProps {
   metrics: ChantierMetrics | null;
 }
 
-function StatutBadge({ statut }: { statut: string }) {
-  const config: Record<string, { variant: any; label: string; className: string }> = {
-    VERT: { variant: 'default', label: '✓ Rentable', className: 'bg-success/10 text-success border-success/20 hover:bg-success/20' },
-    JAUNE: { variant: 'secondary', label: '⚠ Attention', className: 'bg-warning/10 text-warning border-warning/20 hover:bg-warning/20' },
-    ORANGE: { variant: 'secondary', label: '⚠ Alerte', className: 'bg-alert/10 text-alert border-alert/20 hover:bg-alert/20' },
-    ROUGE: { variant: 'destructive', label: '✕ Critique', className: 'bg-danger/10 text-danger border-danger/20 hover:bg-danger/20' },
-  };
-
-  const c = config[statut] || config.VERT;
-  return <Badge className={c.className}>{c.label}</Badge>;
-}
-
 export default function ChantierKpis({ metrics }: ChantierKpisProps) {
   if (!metrics) return null;
+
+  const rentabilityBadge = getRentabilityBadge(metrics.profitability_pct || 0);
 
   const formatCurrency = (value: number | null | undefined) => {
     if (value == null) return '—';
@@ -38,7 +29,6 @@ export default function ChantierKpis({ metrics }: ChantierKpisProps) {
   };
 
   const isProfitable = metrics.profitability_pct >= 0;
-  const isHealthy = metrics.profitability_pct >= 10;
 
   return (
     <div className="space-y-6 animate-fade-up">
@@ -50,7 +40,9 @@ export default function ChantierKpis({ metrics }: ChantierKpisProps) {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
-            <StatutBadge statut={metrics.statut_rentabilite} />
+            <Badge className={`font-bold px-4 py-2 border-2 ${rentabilityBadge.bgColor} ${rentabilityBadge.color}`}>
+              {rentabilityBadge.emoji} {rentabilityBadge.label}
+            </Badge>
             <div className="flex items-center gap-2">
               {isProfitable ? (
                 <TrendingUp className="h-5 w-5 text-success" />
@@ -61,10 +53,15 @@ export default function ChantierKpis({ metrics }: ChantierKpisProps) {
                 {metrics.profitability_pct?.toFixed(1) ?? '0'}%
               </span>
             </div>
-            {!isHealthy && (
-              <div className="ml-auto flex items-center gap-2 text-alert">
-                <AlertTriangle className="h-5 w-5" />
-                <span className="text-sm font-medium">Surveillance nécessaire</span>
+            {rentabilityBadge.urgency !== 'none' && (
+              <div className="ml-auto flex items-center gap-2">
+                <AlertTriangle className={`h-5 w-5 ${rentabilityBadge.color}`} />
+                <span className={`text-sm font-medium ${rentabilityBadge.color}`}>
+                  {rentabilityBadge.urgency === 'critical' && '🚨 Critique'}
+                  {rentabilityBadge.urgency === 'high' && '⚠️ Urgent'}
+                  {rentabilityBadge.urgency === 'medium' && '⚠️ Attention'}
+                  {rentabilityBadge.urgency === 'low' && 'Vigilance'}
+                </span>
               </div>
             )}
           </div>

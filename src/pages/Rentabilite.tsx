@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, DollarSign, TrendingDown, Percent, Search, MapPin, AlertCircle } from "lucide-react";
+import { getRentabilityBadge } from "@/lib/rentabilityBadge";
 
 interface ChantierMetrics {
   id: string;
@@ -258,6 +259,7 @@ const Rentabilite = () => {
           filteredChantiers.map((chantier) => {
             const etat = etatConfig[chantier.etat_chantier] || etatConfig['brouillon'];
             const hasMetrics = chantier.metrics && chantier.budget_ht > 0;
+            const rentabilityBadge = getRentabilityBadge(chantier.metrics?.profitability_pct || 0);
 
             return (
               <Card key={chantier.id} className="card-premium hover-lift cursor-pointer transition-all">
@@ -269,6 +271,11 @@ const Rentabilite = () => {
                           {etat.icon} {etat.label}
                         </Badge>
                         <h3 className="text-xl font-black">{chantier.nom_chantier}</h3>
+                        {hasMetrics && (
+                          <Badge className={`font-bold px-3 py-1 border-2 ${rentabilityBadge.bgColor} ${rentabilityBadge.color}`}>
+                            {rentabilityBadge.emoji} {rentabilityBadge.label}
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <MapPin className="h-4 w-4" />
