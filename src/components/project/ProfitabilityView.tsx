@@ -1,9 +1,11 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import ChantierKpis from "@/components/ChantierKpis";
 import ChantierCharts from "@/components/ChantierCharts";
 import { ChantierMetrics } from "@/hooks/useChantierMetrics";
 import { TrendingUp } from "lucide-react";
+import { getRentabilityBadge } from "@/lib/rentabilityBadge";
 
 interface ProfitabilityViewProps {
   metrics: ChantierMetrics | null;
@@ -39,8 +41,33 @@ const ProfitabilityView = ({ metrics, loading, chantierId }: ProfitabilityViewPr
     );
   }
 
+  const rentabilityBadge = getRentabilityBadge(metrics.profitability_pct || 0);
+
   return (
     <div className="space-y-6">
+      {/* Badge de rentabilité */}
+      <Card className="card-premium">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-muted-foreground mb-1">État de rentabilité</h3>
+              <Badge className={`text-lg font-bold px-4 py-2 border-2 ${rentabilityBadge.bgColor} ${rentabilityBadge.color}`}>
+                {rentabilityBadge.emoji} {rentabilityBadge.label}
+              </Badge>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-black">{metrics.profitability_pct?.toFixed(1)}%</div>
+              <div className="text-sm text-muted-foreground">Marge brute</div>
+            </div>
+          </div>
+          <div className={`mt-4 p-4 rounded-lg border-l-4 ${rentabilityBadge.bgColor}`}>
+            <p className={`text-sm font-medium ${rentabilityBadge.color}`}>
+              {rentabilityBadge.message}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Indicateurs clés */}
       <ChantierKpis metrics={metrics} />
       

@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link, useNavigate } from "react-router-dom";
 import { Building, Calendar, AlertTriangle, MoreVertical, Edit, Trash2 } from "lucide-react";
+import { getRentabilityBadge } from "@/lib/rentabilityBadge";
 
 interface ProjectCardProps {
   id: string;
@@ -44,28 +45,7 @@ const ProjectCard = ({
   };
   
   const currentEtat = etatConfig[etat_chantier] || etatConfig['en_cours'];
-  
-  const getStatusColor = (rentabilite: number) => {
-    if (rentabilite >= 20) return "bg-success";
-    if (rentabilite >= 10) return "bg-warning";
-    if (rentabilite > 0) return "bg-alert";
-    return "bg-danger";
-  };
-
-  const getStatusLabel = (rentabilite: number) => {
-    if (rentabilite >= 20) return "Excellent";
-    if (rentabilite >= 10) return "Bon";
-    if (rentabilite > 0) return "Attention";
-    return "Déficit";
-  };
-
-  const getStatusVariant = (rentabilite: number): "default" | "secondary" | "destructive" | "outline" => {
-    if (rentabilite >= 20) return "default";
-    if (rentabilite >= 10) return "secondary";
-    if (rentabilite > 0) return "outline";
-    return "destructive";
-  };
-
+  const rentabilityBadge = getRentabilityBadge(rentabilite);
   const progressValue = budget_devis > 0 ? (couts_engages / budget_devis) * 100 : 0;
 
   return (
@@ -88,10 +68,9 @@ const ProjectCard = ({
           </div>
           <div className="flex items-center gap-2">
             <Badge 
-              variant={getStatusVariant(rentabilite)}
-              className="font-bold px-3 py-1"
+              className={`font-bold px-3 py-1 border-2 ${rentabilityBadge.bgColor} ${rentabilityBadge.color}`}
             >
-              {getStatusLabel(rentabilite)}
+              {rentabilityBadge.emoji} {rentabilityBadge.label}
             </Badge>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
