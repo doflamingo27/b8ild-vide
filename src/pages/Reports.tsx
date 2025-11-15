@@ -11,6 +11,7 @@ import EmptyState from "@/components/EmptyState";
 import { labels, emptyStates } from "@/lib/content";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { getRentabilityBadge } from "@/lib/rentabilityBadge";
 
 const Reports = () => {
   const [chantiers, setChantiers] = useState<any[]>([]);
@@ -193,6 +194,8 @@ const Reports = () => {
               : 0;
             const jours_restants_avant_deficit = Math.max(0, Math.floor(jour_critique - jours_effectifs));
             
+            const rentabilityBadge = getRentabilityBadge(rentabilite_pct);
+            
             let statut: "success" | "warning" | "alert" | "danger";
             if (rentabilite_pct >= 20) statut = "success";
             else if (rentabilite_pct >= 10) statut = "warning";
@@ -242,14 +245,19 @@ const Reports = () => {
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Rentabilité</p>
-                      <p className={`text-2xl font-black font-mono ${
-                        rentabilite_pct >= 20 ? "text-success" :
-                        rentabilite_pct >= 10 ? "text-warning" :
-                        rentabilite_pct > 0 ? "text-alert" :
-                        "text-danger"
-                      }`}>
-                        {rentabilite_pct.toFixed(1)} %
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className={`text-2xl font-black font-mono ${
+                          rentabilite_pct >= 20 ? "text-success" :
+                          rentabilite_pct >= 10 ? "text-warning" :
+                          rentabilite_pct > 0 ? "text-alert" :
+                          "text-danger"
+                        }`}>
+                          {rentabilite_pct.toFixed(1)} %
+                        </p>
+                        <Badge className={`${rentabilityBadge.bgColor} ${rentabilityBadge.color} border text-xs`}>
+                          {rentabilityBadge.emoji}
+                        </Badge>
+                      </div>
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Jour critique</p>
@@ -257,20 +265,12 @@ const Reports = () => {
                     </div>
                     <div className="space-y-1">
                       <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Statut</p>
-                      <Badge 
-                        variant={
-                          statut === "success" ? "default" :
-                          statut === "warning" ? "secondary" :
-                          statut === "alert" ? "outline" :
-                          "destructive"
-                        }
-                        className="text-sm font-bold px-3 py-1"
-                      >
-                        {statut === "success" ? "Excellent" :
-                         statut === "warning" ? "Bon" :
-                         statut === "alert" ? "Attention" :
-                         "Critique"}
-                      </Badge>
+                      <div>
+                        <Badge className={`${rentabilityBadge.bgColor} ${rentabilityBadge.color} border text-sm font-bold px-3 py-1`}>
+                          {rentabilityBadge.label}
+                        </Badge>
+                        <p className="text-xs text-muted-foreground mt-1">{rentabilityBadge.message}</p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

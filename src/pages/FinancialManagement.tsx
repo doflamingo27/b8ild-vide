@@ -176,58 +176,92 @@ const FinancialManagement = () => {
   return (
     <div className="space-y-8 animate-fade-up">
       {/* Header */}
-      <div>
-        <Button onClick={() => navigate("/projects")} variant="ghost" className="mb-6 hover-lift">
-          <ArrowLeft className="mr-2 h-4 w-4" />
+      <div className="space-y-6">
+        <Button onClick={() => navigate("/projects")} variant="ghost" className="hover-lift group">
+          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
           Retour aux chantiers
         </Button>
         
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-black text-gradient-primary">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+          <div className="flex-1">
+            <h1 className="text-4xl font-black text-gradient-primary flex items-center gap-3">
+              <Building className="h-9 w-9 text-primary" />
               Gestion financière
             </h1>
             {selectedChantier && (
-              <p className="text-muted-foreground text-lg mt-2">
-                {selectedChantier.client}
-              </p>
+              <div className="mt-3 space-y-1">
+                <p className="text-xl font-semibold text-foreground">
+                  {selectedChantier.nom_chantier}
+                </p>
+                <p className="text-muted-foreground">
+                  Client : {selectedChantier.client}
+                </p>
+              </div>
             )}
           </div>
-          <div className="w-80">
-            <Select value={selectedChantierId} onValueChange={setSelectedChantierId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un chantier" />
-              </SelectTrigger>
-              <SelectContent>
-                {chantiers.map((chantier) => (
-                  <SelectItem key={chantier.id} value={chantier.id}>
-                    {chantier.nom_chantier}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Card className="lg:w-96 shadow-lg">
+            <CardContent className="pt-6">
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                Chantier sélectionné
+              </label>
+              <Select value={selectedChantierId} onValueChange={setSelectedChantierId}>
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Sélectionner un chantier" />
+                </SelectTrigger>
+                <SelectContent>
+                  {chantiers.map((chantier) => (
+                    <SelectItem key={chantier.id} value={chantier.id}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{chantier.nom_chantier}</span>
+                        <span className="text-xs text-muted-foreground">{chantier.client}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
       {/* Tabs avec 5 sous-onglets */}
-      <Card className="card-premium">
+      <Card className="card-premium shadow-xl">
         <Tabs defaultValue="profitability" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 h-14 bg-muted/50 p-1">
-            <TabsTrigger value="profitability" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">
-              📊 Rentabilité
+          <TabsList className="grid w-full grid-cols-5 h-auto bg-muted/30 p-1.5 gap-1">
+            <TabsTrigger 
+              value="profitability" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all py-3 font-semibold"
+            >
+              <span className="hidden sm:inline">📊 Rentabilité</span>
+              <span className="sm:hidden">📊</span>
             </TabsTrigger>
-            <TabsTrigger value="quote" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">
-              📄 Devis
+            <TabsTrigger 
+              value="quote" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all py-3 font-semibold"
+            >
+              <span className="hidden sm:inline">📄 Devis</span>
+              <span className="sm:hidden">📄</span>
             </TabsTrigger>
-            <TabsTrigger value="team" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">
-              👥 Équipe
+            <TabsTrigger 
+              value="team" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all py-3 font-semibold"
+            >
+              <span className="hidden sm:inline">👥 Équipe</span>
+              <span className="sm:hidden">👥</span>
             </TabsTrigger>
-            <TabsTrigger value="invoices" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">
-              💳 Factures
+            <TabsTrigger 
+              value="invoices" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all py-3 font-semibold"
+            >
+              <span className="hidden sm:inline">💳 Factures</span>
+              <span className="sm:hidden">💳</span>
             </TabsTrigger>
-            <TabsTrigger value="expenses" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">
-              📦 Coûts annexes
+            <TabsTrigger 
+              value="expenses" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all py-3 font-semibold"
+            >
+              <span className="hidden sm:inline">📦 Coûts annexes</span>
+              <span className="sm:hidden">📦</span>
             </TabsTrigger>
           </TabsList>
 
