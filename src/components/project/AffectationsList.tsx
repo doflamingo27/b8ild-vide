@@ -98,6 +98,8 @@ const AffectationsList = ({ chantierId, entrepriseId }: AffectationsListProps) =
     return acc;
   }, {} as Record<string, any[]>);
 
+  type AffectationGroup = [string, any[]];
+
   // Calculer les totaux
   const totalCout = affectations.reduce((sum, aff) => {
     const cout = aff.jours_travailles * aff.heures_par_jour * 
@@ -138,7 +140,7 @@ const AffectationsList = ({ chantierId, entrepriseId }: AffectationsListProps) =
           </div>
         ) : (
           <>
-            {Object.entries(groupedAffectations).map(([key, affs]) => {
+            {(Object.entries(groupedAffectations) as AffectationGroup[]).map(([key, affs]) => {
               const isMembre = affs[0].membre_equipe_id;
               const entity = isMembre 
                 ? membres.find(m => m.id === affs[0].membre_equipe_id)
