@@ -55,6 +55,79 @@ export type Database = {
           },
         ]
       }
+      affectations_chantiers: {
+        Row: {
+          chantier_id: string
+          charges_patronales_pct: number | null
+          charges_salariales_pct: number | null
+          created_at: string | null
+          date_debut: string
+          date_fin: string
+          equipe_id: string | null
+          heures_par_jour: number | null
+          id: string
+          jours_travailles: number
+          membre_equipe_id: string
+          notes: string | null
+          taux_horaire_specifique: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          chantier_id: string
+          charges_patronales_pct?: number | null
+          charges_salariales_pct?: number | null
+          created_at?: string | null
+          date_debut: string
+          date_fin: string
+          equipe_id?: string | null
+          heures_par_jour?: number | null
+          id?: string
+          jours_travailles: number
+          membre_equipe_id: string
+          notes?: string | null
+          taux_horaire_specifique?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          chantier_id?: string
+          charges_patronales_pct?: number | null
+          charges_salariales_pct?: number | null
+          created_at?: string | null
+          date_debut?: string
+          date_fin?: string
+          equipe_id?: string | null
+          heures_par_jour?: number | null
+          id?: string
+          jours_travailles?: number
+          membre_equipe_id?: string
+          notes?: string | null
+          taux_horaire_specifique?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affectations_chantiers_chantier_id_fkey"
+            columns: ["chantier_id"]
+            isOneToOne: false
+            referencedRelation: "chantiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affectations_chantiers_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affectations_chantiers_membre_equipe_id_fkey"
+            columns: ["membre_equipe_id"]
+            isOneToOne: false
+            referencedRelation: "membres_equipe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chantier_metrics_realtime: {
         Row: {
           chantier_id: string
@@ -417,6 +490,36 @@ export type Database = {
           },
         ]
       }
+      equipes: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          entreprise_id: string
+          id: string
+          nom: string
+          specialite: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          entreprise_id: string
+          id?: string
+          nom: string
+          specialite?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          entreprise_id?: string
+          id?: string
+          nom?: string
+          specialite?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       factures_clients: {
         Row: {
           chantier_id: string
@@ -698,6 +801,7 @@ export type Database = {
           charges_salariales_pct: number | null
           created_at: string | null
           entreprise_id: string
+          equipe_id: string | null
           id: string
           nom: string
           poste: string | null
@@ -714,6 +818,7 @@ export type Database = {
           charges_salariales_pct?: number | null
           created_at?: string | null
           entreprise_id: string
+          equipe_id?: string | null
           id?: string
           nom: string
           poste?: string | null
@@ -730,6 +835,7 @@ export type Database = {
           charges_salariales_pct?: number | null
           created_at?: string | null
           entreprise_id?: string
+          equipe_id?: string | null
           id?: string
           nom?: string
           poste?: string | null
@@ -744,6 +850,13 @@ export type Database = {
             columns: ["entreprise_id"]
             isOneToOne: false
             referencedRelation: "entreprises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membres_equipe_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
             referencedColumns: ["id"]
           },
         ]
