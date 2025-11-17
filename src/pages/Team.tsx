@@ -159,11 +159,11 @@ const Team = () => {
     try {
       const { error } = await supabase
         .from("membres_equipe")
-        .update({ actif: false })
+        .delete()
         .eq("id", deleteId);
 
       if (error) throw error;
-      toast({ title: toasts.deactivated, description: "Le membre a été retiré de l'équipe." });
+      toast({ title: "Membre supprimé", description: "Le membre a été supprimé définitivement." });
       loadMembres();
     } catch (error: any) {
       toast({ title: "Erreur", description: toasts.errorGeneric, variant: "destructive" });
