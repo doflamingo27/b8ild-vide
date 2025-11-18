@@ -237,6 +237,13 @@ const Projects = () => {
     if (!deleteId) return;
 
     try {
+      // Supprimer d'abord les métriques realtime liées
+      await supabase
+        .from("chantier_metrics_realtime")
+        .delete()
+        .eq("chantier_id", deleteId);
+
+      // Puis supprimer le chantier
       const { error } = await supabase
         .from("chantiers")
         .delete()
@@ -246,7 +253,7 @@ const Projects = () => {
 
       toast({
         title: "Chantier supprimé",
-        description: "Le chantier a été supprimé avec succès.",
+        description: "Le chantier a été supprimé définitivement.",
       });
       
       loadProjects();
