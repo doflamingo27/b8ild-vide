@@ -504,42 +504,25 @@ const Team = () => {
       </div>
 
       {/* Filtres */}
-      <div className="flex gap-2 flex-wrap items-center">
-        <Button
-          variant={filterStatut === 'all' ? 'default' : 'outline'}
-          onClick={() => setFilterStatut('all')}
-          className="font-semibold"
-        >
-          Tous
-        </Button>
-        <Button
-          variant={filterStatut === 'sur_chantier' ? 'default' : 'outline'}
-          onClick={() => setFilterStatut('sur_chantier')}
-          className="font-semibold"
-        >
-          🚧 Sur chantier
-        </Button>
-        <Button
-          variant={filterStatut === 'disponible' ? 'default' : 'outline'}
-          onClick={() => setFilterStatut('disponible')}
-          className="font-semibold"
-        >
-          ✅ Disponibles
-        </Button>
-        <Button
-          variant={filterStatut === 'repos' ? 'default' : 'outline'}
-          onClick={() => setFilterStatut('repos')}
-          className="font-semibold"
-        >
-          😴 Repos
-        </Button>
-        <Button
-          variant={filterStatut === 'en_arret' ? 'default' : 'outline'}
-          onClick={() => setFilterStatut('en_arret')}
-          className="font-semibold"
-        >
-          🏥 En arrêt
-        </Button>
+      <div className="flex gap-4 flex-wrap items-center">
+        <div className="flex items-center gap-2">
+          <Label className="text-sm font-semibold text-muted-foreground">Statut:</Label>
+          <Select
+            value={filterStatut}
+            onValueChange={(value: any) => setFilterStatut(value)}
+          >
+            <SelectTrigger className="w-[200px] bg-background z-50">
+              <SelectValue placeholder="Tous les statuts" />
+            </SelectTrigger>
+            <SelectContent className="bg-background z-50">
+              <SelectItem value="all">Tous</SelectItem>
+              <SelectItem value="sur_chantier">🚧 Sur chantier</SelectItem>
+              <SelectItem value="disponible">✅ Disponibles</SelectItem>
+              <SelectItem value="repos">😴 Repos</SelectItem>
+              <SelectItem value="en_arret">🏥 En arrêt</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         
         <div className="flex items-center gap-2">
           <Label className="text-sm font-semibold text-muted-foreground">Équipe:</Label>
