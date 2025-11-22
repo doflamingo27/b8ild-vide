@@ -464,12 +464,12 @@ const Team = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground uppercase">
-              Actifs
+              Disponibles
             </CardTitle>
-            <UserCheck className="h-5 w-5 text-green-500" />
+            <UserCheck className="h-5 w-5 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black text-green-600">{membresActifs}</div>
+            <div className="text-3xl font-black text-blue-600">{membresDisponibles}</div>
           </CardContent>
         </Card>
 
