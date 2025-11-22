@@ -49,7 +49,8 @@ const Team = () => {
   const [loading, setLoading] = useState(false);
   const [entrepriseId, setEntrepriseId] = useState<string | null>(null);
   const [editingMembre, setEditingMembre] = useState<Membre | null>(null);
-  const [filterStatus, setFilterStatus] = useState<'all' | 'actifs' | 'inactifs'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'actifs'>('all');
+  const [filterEquipe, setFilterEquipe] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     prenom: "",
     nom: "",
@@ -215,8 +216,12 @@ const Team = () => {
 
   // Filtrage des membres
   const filteredMembres = membres.filter(membre => {
-    if (filterStatus === 'actifs') return membre.actif;
-    if (filterStatus === 'inactifs') return !membre.actif;
+    // Filtre par statut
+    if (filterStatus === 'actifs' && !membre.actif) return false;
+    
+    // Filtre par équipe
+    if (filterEquipe && membre.equipe_id !== filterEquipe) return false;
+    
     return true;
   });
 
@@ -452,7 +457,7 @@ const Team = () => {
       </div>
 
       {/* Filtres */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap items-center">
         <Button
           variant={filterStatus === 'all' ? 'default' : 'outline'}
           onClick={() => setFilterStatus('all')}
@@ -467,13 +472,26 @@ const Team = () => {
         >
           ✅ Actifs
         </Button>
-        <Button
-          variant={filterStatus === 'inactifs' ? 'default' : 'outline'}
-          onClick={() => setFilterStatus('inactifs')}
-          className="font-semibold"
-        >
-          ❌ Inactifs
-        </Button>
+        
+        <div className="flex items-center gap-2">
+          <Label className="text-sm font-semibold text-muted-foreground">Équipe:</Label>
+          <Select
+            value={filterEquipe || "all"}
+            onValueChange={(value) => setFilterEquipe(value === "all" ? null : value)}
+          >
+            <SelectTrigger className="w-[200px] bg-background z-50">
+              <SelectValue placeholder="Toutes les équipes" />
+            </SelectTrigger>
+            <SelectContent className="bg-background z-[100]">
+              <SelectItem value="all">Toutes les équipes</SelectItem>
+              {equipes.map((equipe) => (
+                <SelectItem key={equipe.id} value={equipe.id}>
+                  {equipe.nom}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Card className="card-premium">
