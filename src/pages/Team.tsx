@@ -228,9 +228,9 @@ const Team = () => {
   // Calcul des KPIs
   const totalMembres = membres.length;
   const membresActifs = membres.filter(m => m.actif).length;
-  const ouvriers = membres.filter(m => 
-    m.actif && (m.poste.toLowerCase().includes('ouvrier') || m.specialite.toLowerCase().includes('ouvrier'))
-  ).length;
+  const coutTotalJournalier = membres
+    .filter(m => m.actif)
+    .reduce((sum, m) => sum + calculerCoutJournalierMembre(m), 0);
   const coutMoyenHoraire = membresActifs > 0 
     ? membres.filter(m => m.actif).reduce((sum, m) => sum + m.taux_horaire, 0) / membresActifs 
     : 0;
@@ -446,12 +446,12 @@ const Team = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground uppercase">
-              Ouvriers
+              Coût Total/Jour
             </CardTitle>
-            <Hammer className="h-5 w-5 text-blue-500" />
+            <Calculator className="h-5 w-5 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black text-blue-600">{ouvriers}</div>
+            <div className="text-3xl font-black text-purple-600">{coutTotalJournalier.toFixed(2)}€</div>
           </CardContent>
         </Card>
       </div>
