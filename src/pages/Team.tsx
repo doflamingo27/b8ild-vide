@@ -52,9 +52,6 @@ const Team = () => {
   const [entrepriseId, setEntrepriseId] = useState<string | null>(null);
   const [editingMembre, setEditingMembre] = useState<Membre | null>(null);
   const [filterStatut, setFilterStatut] = useState<'all' | 'sur_chantier' | 'disponible' | 'repos' | 'en_arret'>('all');
-  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
-  const [editingMembreId, setEditingMembreId] = useState<string | null>(null);
-  const [newStatut, setNewStatut] = useState<string>('disponible');
   const [filterEquipe, setFilterEquipe] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     prenom: "",
@@ -260,18 +257,16 @@ const Team = () => {
     return badges[statut as keyof typeof badges] || badges.disponible;
   };
 
-  // Fonction de modification du statut
-  const handleChangeStatut = async () => {
+  const handleStatutChange = async (membreId: string, statut: Membre["statut"]) => {
     try {
       const { error } = await supabase
         .from("membres_equipe")
-        .update({ statut: newStatut })
-        .eq("id", editingMembreId);
+        .update({ statut })
+        .eq("id", membreId);
 
       if (error) throw error;
 
       toast({ title: "Statut modifié avec succès" });
-      setStatusDialogOpen(false);
       loadMembres();
     } catch (error: any) {
       toast({
@@ -605,28 +600,23 @@ const Team = () => {
                         {calculerCoutJournalierMembre(membre).toFixed(2)} €
                       </TableCell>
                       <TableCell>
-                        <Badge 
-                          className={cn("font-semibold", getStatutBadge(membre.statut).className)}
+                        <Select
+                          value={membre.statut}
+                          onValueChange={(value) => handleStatutChange(membre.id, value as Membre["statut"])}
                         >
-                          {getStatutBadge(membre.statut).label}
-                        </Badge>
+                          <SelectTrigger className="w-[180px] bg-muted/60">
+                            <SelectValue>{getStatutBadge(membre.statut).label}</SelectValue>
+                          </SelectTrigger>
+                          <SelectContent className="bg-background z-50">
+                            <SelectItem value="sur_chantier">🚧 Sur chantier</SelectItem>
+                            <SelectItem value="disponible">✅ Disponible</SelectItem>
+                            <SelectItem value="repos">😴 Repos</SelectItem>
+                            <SelectItem value="en_arret">🏥 En arrêt</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setEditingMembreId(membre.id);
-                              setNewStatut(membre.statut);
-                              setStatusDialogOpen(true);
-                            }}
-                            className="hover:bg-primary/10"
-                            aria-label="Changer le statut"
-                            title="Changer le statut"
-                          >
-                            <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -657,47 +647,6 @@ const Team = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Dialog de modification du statut */}
-      <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Modifier le statut</DialogTitle>
-            <DialogDescription>
-              Changez le statut de ce membre. Le statut sera automatiquement mis à jour 
-              "Sur chantier" s'il est affecté à un projet actif.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <RadioGroup value={newStatut} onValueChange={setNewStatut}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="sur_chantier" id="st-chantier" />
-              <Label htmlFor="st-chantier">🚧 Sur chantier</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="disponible" id="st-disponible" />
-              <Label htmlFor="st-disponible">✅ Disponible</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="repos" id="st-repos" />
-              <Label htmlFor="st-repos">😴 Repos</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="en_arret" id="st-arret" />
-              <Label htmlFor="st-arret">🏥 En arrêt (maladie/accident)</Label>
-            </div>
-          </RadioGroup>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setStatusDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleChangeStatut}>
-              Enregistrer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
