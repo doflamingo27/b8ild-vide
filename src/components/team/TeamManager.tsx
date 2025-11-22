@@ -18,6 +18,7 @@ interface Equipe {
   description: string;
   specialite: string;
   created_at: string;
+  membres_count?: number;
 }
 
 interface TeamManagerProps {
@@ -52,7 +53,23 @@ const TeamManager = ({ entrepriseId, addMemberButton }: TeamManagerProps) => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setEquipes(data || []);
+
+      // Charger le nombre de membres pour chaque équipe
+      const equipesWithCount = await Promise.all(
+        (data || []).map(async (equipe) => {
+          const { count } = await supabase
+            .from("membres_equipe")
+            .select("*", { count: "exact", head: true })
+            .eq("equipe_id", equipe.id);
+          
+          return {
+            ...equipe,
+            membres_count: count || 0,
+          };
+        })
+      );
+
+      setEquipes(equipesWithCount);
     } catch (error: any) {
       console.error("Erreur chargement équipes:", error);
     }
@@ -245,6 +262,7 @@ const TeamManager = ({ entrepriseId, addMemberButton }: TeamManagerProps) => {
                 <TableHead>Nom</TableHead>
                 <TableHead>Spécialité</TableHead>
                 <TableHead>Description</TableHead>
+                <TableHead>Nombre</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -259,6 +277,11 @@ const TeamManager = ({ entrepriseId, addMemberButton }: TeamManagerProps) => {
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {equipe.description || "-"}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="font-semibold">
+                      {equipe.membres_count || 0} {equipe.membres_count === 1 ? "membre" : "membres"}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
