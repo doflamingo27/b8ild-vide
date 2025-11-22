@@ -27,6 +27,8 @@ export default function ChantierCharts({ chantierId }: ChantierChartsProps) {
   async function loadSnapshots() {
     try {
       setLoading(true);
+      
+      // 1. Charger les snapshots historiques
       const { data, error } = await supabase
         .from('chantier_snapshots')
         .select('*')
@@ -35,26 +37,54 @@ export default function ChantierCharts({ chantierId }: ChantierChartsProps) {
 
       if (error) {
         console.error('[ChantierCharts] Error loading snapshots:', error);
-      } else if (data) {
-        setSnapshots(data as Snapshot[]);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Charger les métriques temps réel
+      const { data: metricsData } = await supabase
+        .from('chantier_metrics_realtime')
+        .select('metrics')
+        .eq('chantier_id', chantierId)
+        .maybeSingle();
+
+      const historicalSnapshots = data || [];
+      
+      // 3. Si on a des métriques temps réel, ajouter un point "aujourd'hui"
+      if (metricsData?.metrics) {
+        const metrics = metricsData.metrics as any;
+        const todaySnapshot: Snapshot = {
+          d: format(new Date(), 'yyyy-MM-dd'),
+          cout_main_oeuvre: metrics.cout_main_oeuvre_reel || 0,
+          couts_fixes: metrics.couts_fixes_engages || 0,
+          budget_ht: metrics.budget_ht || 0,
+          marge_a_date: metrics.marge_a_date || 0,
+          profitability_pct: metrics.profitability_pct || 0,
+        };
         
-        // Si aucun snapshot n'existe, créer un snapshot initial
-        if (data.length === 0) {
-          console.log('[ChantierCharts] No snapshots found, creating initial snapshot');
-          const { error: rpcError } = await supabase.rpc('snapshot_chantier_daily');
-          
-          if (!rpcError) {
-            // Recharger les snapshots après création
-            const { data: newData } = await supabase
-              .from('chantier_snapshots')
-              .select('*')
-              .eq('chantier_id', chantierId)
-              .order('d', { ascending: true });
-            
-            if (newData) {
-              setSnapshots(newData as Snapshot[]);
-            }
-          }
+        // Ne pas dupliquer si un snapshot existe déjà pour aujourd'hui
+        const hasToday = historicalSnapshots.some(s => s.d === todaySnapshot.d);
+        if (!hasToday) {
+          setSnapshots([...historicalSnapshots, todaySnapshot]);
+        } else {
+          // Remplacer le snapshot d'aujourd'hui par la valeur temps réel
+          setSnapshots([
+            ...historicalSnapshots.filter(s => s.d !== todaySnapshot.d),
+            todaySnapshot
+          ]);
+        }
+      } else {
+        setSnapshots(historicalSnapshots);
+      }
+      
+      // Si aucun snapshot historique n'existe, créer un snapshot initial
+      if (historicalSnapshots.length === 0 && !metricsData?.metrics) {
+        console.log('[ChantierCharts] No snapshots found, creating initial snapshot');
+        const { error: rpcError } = await supabase.rpc('snapshot_chantier_daily');
+        
+        if (!rpcError) {
+          // Recharger après création
+          loadSnapshots();
         }
       }
     } catch (err) {
@@ -65,9 +95,52 @@ export default function ChantierCharts({ chantierId }: ChantierChartsProps) {
   }
 
   useEffect(() => {
-    if (chantierId) {
-      loadSnapshots();
-    }
+    if (!chantierId) return;
+
+    loadSnapshots();
+
+    // ✅ Abonnement Realtime sur les snapshots ET les métriques
+    console.log('[ChantierCharts] 🔌 Subscribing to realtime updates...');
+    
+    const snapshotsChannel = supabase
+      .channel(`snapshots:${chantierId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'chantier_snapshots',
+          filter: `chantier_id=eq.${chantierId}`,
+        },
+        (payload) => {
+          console.log('[ChantierCharts] 🔴 Snapshot update:', payload);
+          loadSnapshots();
+        }
+      )
+      .subscribe();
+
+    const metricsChannel = supabase
+      .channel(`metrics:${chantierId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'chantier_metrics_realtime',
+          filter: `chantier_id=eq.${chantierId}`,
+        },
+        (payload) => {
+          console.log('[ChantierCharts] 🔴 Metrics update:', payload);
+          loadSnapshots();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('[ChantierCharts] 🔌 Unsubscribing from channels');
+      supabase.removeChannel(snapshotsChannel);
+      supabase.removeChannel(metricsChannel);
+    };
   }, [chantierId]);
 
   if (loading) {
