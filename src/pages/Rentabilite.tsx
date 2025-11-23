@@ -139,9 +139,12 @@ const Rentabilite = () => {
   // Calcul des KPIs globaux sur TOUS les chantiers
   const revenusTotaux = chantiers.reduce((sum, c) => sum + (c.budget_ht || 0), 0);
   const coutsTotaux = chantiers.reduce((sum, c) => {
-    const couts_fixes = c.metrics?.couts_fixes_engages || 0;
-    const cout_mo_total = (c.metrics?.cout_journalier_equipe || 0) * (c.metrics?.duree_estimee_jours || 0);
-    return sum + couts_fixes + cout_mo_total;
+    const budget = c.budget_ht || c.metrics?.marge_finale !== undefined
+      ? (c.budget_ht || 0)
+      : 0;
+    const margeFinale = c.metrics?.marge_finale || 0;
+    const coutsTotauxChantier = budget - margeFinale;
+    return sum + coutsTotauxChantier;
   }, 0);
   const margeGlobale = revenusTotaux - coutsTotaux;
   const tauxMargeMoyen = chantiers.length > 0 
@@ -319,8 +322,11 @@ const Rentabilite = () => {
                         <div className="text-right min-w-[120px]">
                           <p className="text-xs text-muted-foreground uppercase mb-1">Coûts</p>
                           <p className="text-xl font-black text-orange-600">
-                            {((chantier.metrics?.couts_fixes_engages || 0) + 
-                              ((chantier.metrics?.cout_journalier_equipe || 0) * (chantier.metrics?.duree_estimee_jours || 0))).toFixed(2)} €
+                            {(() => {
+                              const budget = chantier.budget_ht || 0;
+                              const margeFinale = chantier.metrics?.marge_finale || 0;
+                              return (budget - margeFinale).toFixed(2);
+                            })()} €
                           </p>
                         </div>
                         <div className="text-right min-w-[120px]">
