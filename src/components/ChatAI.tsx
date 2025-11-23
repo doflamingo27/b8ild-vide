@@ -18,7 +18,8 @@ interface ChatMessage {
 
 // Fonction pour nettoyer le markdown des réponses IA
 const cleanMarkdown = (text: string): string => {
-  return text.replace(/\*\*/g, '');
+  // Supprime tous les astérisques pour enlever les ** et *
+  return text.replace(/\*/g, '');
 };
 
 const suggestedQuestions = [
