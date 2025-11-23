@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import DashboardLayout from "@/components/DashboardLayout";
+import ChatAI from "@/components/ChatAI";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -55,6 +56,7 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <ChatAI />
           </BrowserRouter>
         </SubscriptionProvider>
       </TooltipProvider>
