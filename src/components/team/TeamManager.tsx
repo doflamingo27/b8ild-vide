@@ -48,6 +48,8 @@ const TeamManager = ({ entrepriseId, addMemberButton }: TeamManagerProps) => {
   useEffect(() => {
     if (!entrepriseId) return;
 
+    console.log('[TeamManager] Création abonnement Realtime pour entreprise:', entrepriseId);
+
     const channel = supabase
       .channel(`team_membres:${entrepriseId}`)
       .on(
@@ -59,13 +61,16 @@ const TeamManager = ({ entrepriseId, addMemberButton }: TeamManagerProps) => {
           filter: `entreprise_id=eq.${entrepriseId}`,
         },
         (payload) => {
-          console.log('[TeamManager] Membre changé, actualisation nombre...', payload);
+          console.log('[TeamManager] Changement détecté sur membres_equipe:', payload);
           loadEquipes();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[TeamManager] Statut abonnement:', status);
+      });
 
     return () => {
+      console.log('[TeamManager] Suppression abonnement Realtime');
       supabase.removeChannel(channel);
     };
   }, [entrepriseId]);
