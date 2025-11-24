@@ -13,6 +13,7 @@ import QuoteManager from "@/components/project/QuoteManager";
 import TeamAssignment from "@/components/project/TeamAssignment";
 import InvoiceManager from "@/components/project/InvoiceManager";
 import ExpensesManager from "@/components/project/ExpensesManager";
+import DelayPenaltySimulator from "@/components/project/DelayPenaltySimulator";
 import { useCalculations } from "@/hooks/useCalculations";
 
 interface Chantier {
@@ -317,10 +318,10 @@ const FinancialManagement = () => {
         </div>
       </div>
 
-      {/* Tabs avec 5 sous-onglets */}
+      {/* Tabs avec 6 sous-onglets */}
       <Card className="card-premium shadow-xl">
         <Tabs defaultValue="profitability" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 h-auto bg-muted/30 p-1.5 gap-1">
+          <TabsList className="grid w-full grid-cols-6 h-auto bg-muted/30 p-1.5 gap-1">
             <TabsTrigger 
               value="profitability" 
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all py-3 font-semibold"
@@ -355,6 +356,13 @@ const FinancialManagement = () => {
             >
               <span className="hidden sm:inline">📦 Coûts annexes</span>
               <span className="sm:hidden">📦</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="penalty-simulator" 
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all py-3 font-semibold"
+            >
+              <span className="hidden sm:inline">⏱️ Simulateur</span>
+              <span className="sm:hidden">⏱️</span>
             </TabsTrigger>
           </TabsList>
 
@@ -396,6 +404,14 @@ const FinancialManagement = () => {
               chantierId={selectedChantierId} 
               frais={frais} 
               onUpdate={loadChantierData} 
+            />
+          </TabsContent>
+
+          <TabsContent value="penalty-simulator" className="mt-6 p-6">
+            <DelayPenaltySimulator 
+              chantierId={selectedChantierId}
+              metrics={metrics}
+              onSavePenalty={loadChantierData}
             />
           </TabsContent>
         </Tabs>
