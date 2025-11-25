@@ -206,8 +206,41 @@ const TeamAssignment = ({ chantierId, membres, onUpdate, coutJournalier, validat
     return coutHoraireReel * 8;
   };
 
+  // Calculs pour le récap équipe
+  const coutJournalierTotal = membres.reduce((sum, m) => sum + calculerCoutJournalierMembre(m), 0);
+  const joursTravauillesTotal = membres.reduce((sum, m) => sum + (m.jours_travailles || 0), 0);
+  const coutTotalEquipe = membres.reduce((sum, m) => {
+    return sum + (calculerCoutJournalierMembre(m) * (m.jours_travailles || 0));
+  }, 0);
+
   return (
-    <Card>
+    <>
+      {/* Récapitulatif financier équipe */}
+      {membres.length > 0 && (
+        <Card className="mb-4 bg-gradient-to-br from-blue-500/5 to-purple-500/10 border-blue-500/20">
+          <CardHeader>
+            <CardTitle className="text-lg">👥 Récapitulatif Équipe</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-6">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground font-medium">Coût total / jour</p>
+                <p className="text-3xl font-black text-blue-600">{coutJournalierTotal.toFixed(2)} €/j</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground font-medium">Jours travaillés totaux</p>
+                <p className="text-3xl font-black text-foreground">{joursTravauillesTotal} j</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground font-medium">Coût total équipe</p>
+                <p className="text-3xl font-black text-purple-600">{coutTotalEquipe.toFixed(2)} €</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -380,6 +413,7 @@ const TeamAssignment = ({ chantierId, membres, onUpdate, coutJournalier, validat
         </Dialog>
       </CardContent>
     </Card>
+    </>
   );
 };
 

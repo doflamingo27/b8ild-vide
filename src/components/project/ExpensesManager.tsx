@@ -125,7 +125,29 @@ const ExpensesManager = ({ chantierId, frais, onUpdate }: ExpensesManagerProps) 
   const totalFrais = frais.reduce((sum, f) => sum + Number(f.montant_total), 0);
 
   return (
-    <Card>
+    <>
+      {/* Récapitulatif financier */}
+      {frais.length > 0 && (
+        <Card className="mb-4 bg-gradient-to-br from-orange-500/5 to-orange-500/10 border-orange-500/20">
+          <CardHeader>
+            <CardTitle className="text-lg">📦 Récapitulatif Coûts Annexes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground font-medium">Nombre de dépenses</p>
+                <p className="text-3xl font-black text-foreground">{frais.length}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground font-medium">Total coûts annexes</p>
+                <p className="text-3xl font-black text-orange-600">{totalFrais.toFixed(2)} €</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -266,6 +288,7 @@ const ExpensesManager = ({ chantierId, frais, onUpdate }: ExpensesManagerProps) 
         )}
       </CardContent>
     </Card>
+    </>
   );
 };
 

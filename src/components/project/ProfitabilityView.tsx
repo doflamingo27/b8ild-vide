@@ -45,19 +45,20 @@ const ProfitabilityView = ({ metrics, loading, chantierId }: ProfitabilityViewPr
 
   return (
     <div className="space-y-6">
-      {/* Badge de rentabilité inversé */}
+      {/* Badge de rentabilité - BADGE EN AVANT */}
       <Card className="card-premium">
         <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-muted-foreground mb-1">Marge Actuelle</h3>
-              <div className="text-3xl font-black">{metrics.profitability_pct?.toFixed(1)}%</div>
-            </div>
-            <div className="text-right">
-              <h3 className="text-lg font-semibold text-muted-foreground mb-1">Rentabilité Finale Estimée</h3>
-              <Badge className={`text-lg font-bold px-4 py-2 border-2 ${rentabilityBadge.bgColor} ${rentabilityBadge.color}`}>
+          <div className="flex items-center justify-between gap-8">
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-muted-foreground mb-3">Rentabilité Finale Estimée</h3>
+              <Badge className={`text-2xl font-black px-6 py-3 border-2 ${rentabilityBadge.bgColor} ${rentabilityBadge.color}`}>
                 {rentabilityBadge.emoji} {rentabilityBadge.label}
               </Badge>
+            </div>
+            <div className="text-right">
+              <h3 className="text-lg font-semibold text-muted-foreground mb-1">Marge Actuelle</h3>
+              <div className="text-3xl font-black">{metrics.profitability_pct?.toFixed(1)}%</div>
+              <div className="text-sm text-muted-foreground mt-1">à ce jour</div>
             </div>
           </div>
           <div className={`mt-4 p-4 rounded-lg border-l-4 ${rentabilityBadge.bgColor}`}>
