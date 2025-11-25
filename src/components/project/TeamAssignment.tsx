@@ -15,6 +15,7 @@ interface TeamAssignmentProps {
   membres: any[];
   onUpdate: () => void;
   coutJournalier: number;
+  validatedDelayDays?: number;
 }
 
 interface MembreSelection {
@@ -22,7 +23,7 @@ interface MembreSelection {
   jours_travailles: number;
 }
 
-const TeamAssignment = ({ chantierId, membres, onUpdate, coutJournalier }: TeamAssignmentProps) => {
+const TeamAssignment = ({ chantierId, membres, onUpdate, coutJournalier, validatedDelayDays }: TeamAssignmentProps) => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -289,6 +290,9 @@ const TeamAssignment = ({ chantierId, membres, onUpdate, coutJournalier }: TeamA
                 <TableHead>Poste</TableHead>
                 <TableHead className="text-right">Coût journalier</TableHead>
                 <TableHead className="text-right">Jours planifiés</TableHead>
+                {validatedDelayDays && validatedDelayDays > 0 && (
+                  <TableHead className="text-right text-orange-600 font-bold">Retards</TableHead>
+                )}
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -305,6 +309,11 @@ const TeamAssignment = ({ chantierId, membres, onUpdate, coutJournalier }: TeamA
                   <TableCell className="text-right font-mono">
                     {membre.jours_travailles || 0} j
                   </TableCell>
+                  {validatedDelayDays && validatedDelayDays > 0 && (
+                    <TableCell className="text-right font-mono text-orange-600 font-bold">
+                      +{validatedDelayDays} j
+                    </TableCell>
+                  )}
                   <TableCell className="text-right">
                     <div className="flex gap-1 justify-end">
                       <Button 

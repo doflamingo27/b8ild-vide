@@ -20,12 +20,12 @@ import { AlertTriangle, Save, FileText } from 'lucide-react';
 interface DelayPenaltySimulatorProps {
   chantierId: string;
   metrics: ChantierMetrics | null;
-  onSavePenalty?: () => void;
+  onSavePenalty?: (delayDays: number) => void;
 }
 
 export default function DelayPenaltySimulator({ chantierId, metrics, onSavePenalty }: DelayPenaltySimulatorProps) {
   const { user } = useAuth();
-  const [delayDays, setDelayDays] = useState(5);
+  const [delayDays, setDelayDays] = useState(1);
   const [penaltyType, setPenaltyType] = useState<'percentage' | 'fixed' | 'tiered'>('percentage');
   const [penaltyValue, setPenaltyValue] = useState(0.5);
   const [saving, setSaving] = useState(false);
@@ -81,7 +81,7 @@ export default function DelayPenaltySimulator({ chantierId, metrics, onSavePenal
       if (error) throw error;
       
       toast.success('Pénalité enregistrée avec succès');
-      if (onSavePenalty) onSavePenalty();
+      if (onSavePenalty) onSavePenalty(delayDays);
     } catch (error: any) {
       console.error('Erreur enregistrement pénalité:', error);
       toast.error('Erreur lors de l\'enregistrement');
