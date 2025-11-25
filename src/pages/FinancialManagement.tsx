@@ -32,6 +32,7 @@ const FinancialManagement = () => {
   const [factures, setFactures] = useState<any[]>([]);
   const [membres, setMembres] = useState<any[]>([]);
   const [frais, setFrais] = useState<any[]>([]);
+  const [validatedDelay, setValidatedDelay] = useState<number>(0);
 
   const { metrics, loading: metricsLoading } = useChantierMetrics(selectedChantierId || '');
 
@@ -388,6 +389,7 @@ const FinancialManagement = () => {
               membres={membres} 
               onUpdate={loadChantierData}
               coutJournalier={calculations.cout_journalier_equipe}
+              validatedDelayDays={validatedDelay}
             />
           </TabsContent>
 
@@ -411,7 +413,10 @@ const FinancialManagement = () => {
             <DelayPenaltySimulator 
               chantierId={selectedChantierId}
               metrics={metrics}
-              onSavePenalty={loadChantierData}
+              onSavePenalty={(delayDays) => {
+                setValidatedDelay(delayDays);
+                loadChantierData();
+              }}
             />
           </TabsContent>
         </Tabs>

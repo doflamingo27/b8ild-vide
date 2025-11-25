@@ -226,6 +226,74 @@ const Rentabilite = () => {
         </Card>
       </div>
 
+      {/* Récaps financiers */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Récap Coûts Annexes */}
+        <Card className="card-premium">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              📦 Récap Coûts Annexes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Nombre de dépenses</p>
+                <p className="text-2xl font-bold">
+                  {chantiers.reduce((sum, c) => {
+                    // Comptabiliser les frais pour ce chantier (à implémenter côté data)
+                    return sum;
+                  }, 0)}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Total coûts annexes</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {chantiers.reduce((sum, c) => {
+                    const coutsFixes = c.metrics?.couts_fixes_engages || 0;
+                    return sum + coutsFixes;
+                  }, 0).toFixed(2)} €
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Récap Équipe */}
+        <Card className="card-premium">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              👥 Récap Équipe
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Coût total / jour</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {chantiers.reduce((sum, c) => {
+                    return sum + (c.metrics?.cout_journalier_equipe || 0);
+                  }, 0).toFixed(2)} €/j
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Coût total équipe</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {chantiers.reduce((sum, c) => {
+                    const coutJour = c.metrics?.cout_journalier_equipe || 0;
+                    const jours = c.metrics?.duree_estimee_jours || 0;
+                    return sum + (coutJour * jours);
+                  }, 0).toFixed(2)} €
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  sur tous les chantiers
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Barre de recherche et filtres */}
       <div className="flex flex-col sm:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
