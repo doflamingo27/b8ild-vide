@@ -15,9 +15,11 @@ interface ExportManagerProps {
   chantierData: any;
   membres: any[];
   devis?: any;
+  allDevis?: any[];
   factures: any[];
   frais: any[];
   calculations: any;
+  metrics?: any;
 }
 
 const ExportManager = ({
@@ -25,9 +27,11 @@ const ExportManager = ({
   chantierData,
   membres,
   devis,
+  allDevis = [],
   factures,
   frais,
   calculations,
+  metrics,
 }: ExportManagerProps) => {
   const { toast } = useToast();
 
@@ -103,10 +107,15 @@ const ExportManager = ({
 
   const exportToPDF = async () => {
     try {
-      console.log('[PDF Export] Début de l\'export PDF');
+      console.log('[PDF Export] Début de l\'export PDF enrichi');
       
       const doc = new jsPDF();
       let currentY = 20;
+      
+      // Import rentabilityBadge
+      const { getRentabilityBadge } = await import("@/lib/rentabilityBadge");
+      const margeFinalePct = metrics?.marge_finale_pct || calculations?.rentabilite_pct || 0;
+      const rentabilityBadge = getRentabilityBadge(margeFinalePct);
       
       // ========== HEADER DESIGN ==========
       // Bandeau orange en haut
@@ -147,6 +156,39 @@ const ExportManager = ({
       
       currentY += 42;
       
+      // ========== SYNTHÈSE DE RENTABILITÉ ==========
+      doc.setFontSize(14);
+      doc.setTextColor(234, 88, 12);
+      doc.setFont(undefined, 'bold');
+      doc.text("Synthèse de Rentabilité", 20, currentY);
+      
+      currentY += 8;
+      
+      // Badge rentabilité visuel
+      const badgeColors: Record<string, [number, number, number]> = {
+        'critical': [244, 67, 54],
+        'high': [255, 87, 34],
+        'medium': [255, 152, 0],
+        'low': [255, 193, 7],
+        'none': [76, 175, 80]
+      };
+      const badgeColor = badgeColors[rentabilityBadge.urgency] || [76, 175, 80];
+      
+      doc.setFillColor(badgeColor[0], badgeColor[1], badgeColor[2]);
+      doc.roundedRect(15, currentY, 180, 18, 2, 2, 'F');
+      
+      doc.setFontSize(14);
+      doc.setTextColor(255, 255, 255);
+      doc.setFont(undefined, 'bold');
+      doc.text(`${rentabilityBadge.emoji} ${rentabilityBadge.label}`, 20, currentY + 8);
+      doc.text(`${margeFinalePct.toFixed(1)}%`, 150, currentY + 8);
+      
+      doc.setFontSize(9);
+      doc.setFont(undefined, 'normal');
+      doc.text(rentabilityBadge.message, 20, currentY + 15);
+      
+      currentY += 28;
+      
       // ========== FINANCES - KPIs Cards ==========
       const budgetHT = Number(devis?.montant_ht || 0);
       const budgetTTC = Number(devis?.montant_ttc || 0);
@@ -162,21 +204,36 @@ const ExportManager = ({
       
       currentY += 8;
       
-      // KPI Cards en grille 2x3
+      // KPI Cards en grille 2x4 (8 KPIs)
+      const margeActuelle = metrics?.marge_a_date || 0;
+      const margeFinale = metrics?.marge_finale || 0;
+      const joursEcoules = metrics?.jours_ecoules || 0;
+      const joursRestants = metrics?.jours_restants_rentables || 0;
+      
       const kpis = [
         { label: 'Budget Devis HT', value: `${budgetHT.toFixed(2)} €`, color: [66, 135, 245] },
         { label: 'Budget Devis TTC', value: `${budgetTTC.toFixed(2)} €`, color: [66, 135, 245] },
         { label: 'Coût/Jour Équipe', value: `${coutJournalier.toFixed(2)} €`, color: [156, 39, 176] },
         { label: 'Budget Disponible', value: `${budgetDispo.toFixed(2)} €`, color: [76, 175, 80] },
         { 
-          label: 'Rentabilité', 
-          value: `${rentabilite.toFixed(1)} %`, 
-          color: rentabilite >= 20 ? [76, 175, 80] : rentabilite >= 10 ? [255, 152, 0] : [244, 67, 54] 
+          label: 'Marge Actuelle', 
+          value: `${margeActuelle.toFixed(2)} €`, 
+          color: margeActuelle >= 0 ? [76, 175, 80] : [244, 67, 54] 
         },
         { 
-          label: 'Jour Critique', 
-          value: isFinite(jourCrit) && jourCrit !== null ? `${Number(jourCrit).toFixed(0)} j` : 'N/A',
-          color: [255, 87, 34]
+          label: 'Marge Finale Proj.', 
+          value: `${margeFinale.toFixed(2)} €`, 
+          color: margeFinale >= 0 ? [76, 175, 80] : [244, 67, 54] 
+        },
+        { 
+          label: 'Jours Écoulés', 
+          value: `${joursEcoules} j`,
+          color: [100, 100, 100]
+        },
+        { 
+          label: 'Jours Rentables Restants', 
+          value: joursRestants !== null ? `${joursRestants} j` : 'N/A',
+          color: joursRestants > 7 ? [76, 175, 80] : joursRestants > 3 ? [255, 152, 0] : [244, 67, 54]
         }
       ];
       
@@ -203,7 +260,46 @@ const ExportManager = ({
         doc.text(kpi.value, x + 4, y + 15);
       });
       
-      currentY += 80;
+      currentY += 104;
+      
+      // ========== TOUS LES DEVIS ==========
+      if (currentY > 200) {
+        doc.addPage();
+        currentY = 20;
+      }
+      
+      doc.setFontSize(14);
+      doc.setTextColor(234, 88, 12);
+      doc.setFont(undefined, 'bold');
+      doc.text("Devis", 20, currentY);
+      
+      currentY += 5;
+      
+      const devisData = (allDevis || []).map(d => [
+        d.version || 'N/A',
+        d.statut || 'brouillon',
+        `${(d.montant_ht || 0).toFixed(2)} €`,
+        `${(d.montant_ttc || 0).toFixed(2)} €`,
+        d.date_envoi || 'Non envoyé',
+        d.actif ? '✓ ACTIF' : ''
+      ]);
+      
+      if (devisData.length > 0) {
+        autoTable(doc, {
+          head: [['Version', 'Statut', 'HT', 'TTC', 'Date envoi', 'Actif']],
+          body: devisData,
+          startY: currentY,
+          theme: 'striped',
+          headStyles: { 
+            fillColor: [234, 88, 12],
+            fontSize: 10,
+            fontStyle: 'bold',
+            textColor: 255
+          },
+          styles: { fontSize: 9 },
+        });
+        currentY = (doc as any).lastAutoTable.finalY + 10;
+      }
       
       // ========== ÉQUIPE ==========
       doc.setFontSize(14);
@@ -257,8 +353,48 @@ const ExportManager = ({
         currentY = (doc as any).lastAutoTable.finalY + 10;
       }
       
+      // ========== COÛTS ANNEXES ==========
+      if (currentY > 200) {
+        doc.addPage();
+        currentY = 20;
+      }
+      
+      doc.setFontSize(14);
+      doc.setTextColor(234, 88, 12);
+      doc.setFont(undefined, 'bold');
+      doc.text("Coûts Annexes", 20, currentY);
+      
+      currentY += 5;
+      
+      const fraisData = (frais || []).map(f => [
+        f.type_frais || 'Autre',
+        f.description || '',
+        `${(f.montant_total || 0).toFixed(2)} €`,
+        f.date_frais || 'Non renseignée'
+      ]);
+      
+      if (fraisData.length > 0) {
+        autoTable(doc, {
+          head: [['Type', 'Description', 'Montant', 'Date']],
+          body: fraisData,
+          startY: currentY,
+          theme: 'striped',
+          headStyles: { 
+            fillColor: [234, 88, 12],
+            fontSize: 10,
+            fontStyle: 'bold',
+            textColor: 255
+          },
+          styles: { fontSize: 9 },
+          columnStyles: {
+            2: { halign: 'right', fontStyle: 'bold' }
+          }
+        });
+        currentY = (doc as any).lastAutoTable.finalY + 10;
+      }
+      
       // ========== FACTURES ==========
-      if (currentY > 230) {
+      if (currentY > 200) {
         doc.addPage();
         currentY = 20;
       }
@@ -303,8 +439,110 @@ const ExportManager = ({
             2: { halign: 'right', fontStyle: 'bold' }
           }
         });
-        currentY = (doc as any).lastAutoTable.finalY;
+        currentY = (doc as any).lastAutoTable.finalY + 10;
       }
+      
+      // ========== COMPARAISON PRÉVISIONNEL/RÉEL ==========
+      if (currentY > 220) {
+        doc.addPage();
+        currentY = 20;
+      }
+      
+      doc.setFontSize(14);
+      doc.setTextColor(234, 88, 12);
+      doc.setFont(undefined, 'bold');
+      doc.text("Comparaison Prévisionnel / Réel", 20, currentY);
+      
+      currentY += 5;
+      
+      const coutTotal = (metrics?.cout_main_oeuvre_reel || 0) + (metrics?.couts_fixes_engages || 0);
+      const ecartBudget = budgetHT - coutTotal;
+      const avancement = metrics?.duree_estimee_jours ? (metrics.jours_ecoules / metrics.duree_estimee_jours * 100) : 0;
+      
+      autoTable(doc, {
+        head: [['Indicateur', 'Prévu', 'Réel', 'Écart']],
+        body: [
+          [
+            'Budget',
+            `${budgetHT.toFixed(2)} €`,
+            `${coutTotal.toFixed(2)} €`,
+            `${ecartBudget >= 0 ? '+' : ''}${ecartBudget.toFixed(2)} €`
+          ],
+          [
+            'Durée',
+            `${metrics?.duree_estimee_jours || 0} j`,
+            `${metrics?.jours_ecoules || 0} j`,
+            `${avancement.toFixed(1)}%`
+          ]
+        ],
+        startY: currentY,
+        theme: 'striped',
+        headStyles: { 
+          fillColor: [234, 88, 12],
+          fontSize: 10,
+          fontStyle: 'bold',
+          textColor: 255
+        },
+        styles: { fontSize: 10 },
+      });
+      
+      currentY = (doc as any).lastAutoTable.finalY + 15;
+      
+      // ========== CONCLUSION ==========
+      if (currentY > 240) {
+        doc.addPage();
+        currentY = 20;
+      }
+      
+      doc.setFontSize(14);
+      doc.setTextColor(234, 88, 12);
+      doc.setFont(undefined, 'bold');
+      doc.text("Conclusion & Recommandations", 20, currentY);
+      
+      currentY += 8;
+      
+      doc.setFontSize(10);
+      doc.setTextColor(60, 60, 60);
+      doc.setFont(undefined, 'normal');
+      
+      // Statut global
+      doc.setFont(undefined, 'bold');
+      doc.text(`Statut: ${rentabilityBadge.label}`, 20, currentY);
+      doc.setFont(undefined, 'normal');
+      doc.text(rentabilityBadge.message, 20, currentY + 6);
+      
+      currentY += 15;
+      
+      // Recommandations automatiques
+      doc.setFont(undefined, 'bold');
+      doc.text("Recommandations:", 20, currentY);
+      doc.setFont(undefined, 'normal');
+      
+      currentY += 6;
+      
+      const recommendations: string[] = [];
+      
+      if (margeFinalePct < 10) {
+        recommendations.push("• Revoir la structure des coûts et optimiser les dépenses");
+      }
+      if (joursRestants !== null && joursRestants < 5) {
+        recommendations.push("• Accélérer le rythme pour éviter le dépassement de budget");
+      }
+      if (margeFinale < 0) {
+        recommendations.push("• Négocier un avenant client ou réduire drastiquement les coûts");
+      }
+      if (margeFinalePct >= 20) {
+        recommendations.push("• Maintenir le cap, chantier rentable");
+      }
+      
+      recommendations.forEach(rec => {
+        if (currentY > 270) {
+          doc.addPage();
+          currentY = 20;
+        }
+        doc.text(rec, 20, currentY);
+        currentY += 6;
+      });
       
       // ========== FOOTER ==========
       const pageCount = (doc as any).internal.getNumberOfPages();

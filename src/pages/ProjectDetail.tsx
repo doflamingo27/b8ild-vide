@@ -19,7 +19,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, Building, Users, FileText, Receipt, 
-  AlertTriangle, TrendingUp, Calendar, MapPin, Edit, Trash2, Brain 
+  AlertTriangle, TrendingUp, Calendar, MapPin, Edit, Trash2, Brain, CheckCircle2 
 } from "lucide-react";
 import QuoteManager from "@/components/project/QuoteManager";
 import InvoiceManager from "@/components/project/InvoiceManager";
@@ -29,6 +29,7 @@ import ExportManager from "@/components/ExportManager";
 import ChantierKpis from "@/components/ChantierKpis";
 import ChantierCharts from "@/components/ChantierCharts";
 import { AIChantierAnalysis } from "@/components/project/AIChantierAnalysis";
+import ChantierClosureDialog from "@/components/project/ChantierClosureDialog";
 
 interface Chantier {
   id: string;
@@ -66,6 +67,7 @@ const ProjectDetail = () => {
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [closureDialogOpen, setClosureDialogOpen] = useState(false);
   const [editFormData, setEditFormData] = useState({
     nom_chantier: "",
     client: "",
@@ -362,6 +364,16 @@ const ProjectDetail = () => {
           </div>
           <div className="flex items-center gap-3">
             {getStatusBadge()}
+            {chantier.etat_chantier !== 'termine' && chantier.etat_chantier !== 'annule' && (
+              <Button 
+                variant="default"
+                onClick={() => setClosureDialogOpen(true)}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Terminer le chantier
+              </Button>
+            )}
             <Button variant="outline" onClick={openEditDialog}>
               <Edit className="h-4 w-4 mr-2" />
               Modifier
@@ -374,10 +386,12 @@ const ProjectDetail = () => {
               chantierId={id!}
               chantierData={chantier}
               membres={membres}
-              devis={devis}
+              devis={devisActif}
+              allDevis={devis}
               factures={factures}
               frais={frais}
               calculations={calculations}
+              metrics={metrics}
             />
           </div>
         </div>
@@ -490,6 +504,20 @@ const ProjectDetail = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Dialog de clôture */}
+      <ChantierClosureDialog
+        open={closureDialogOpen}
+        onOpenChange={setClosureDialogOpen}
+        chantierId={id!}
+        chantierData={chantier}
+        metrics={metrics}
+        membres={membres}
+        devis={devis}
+        factures={factures}
+        frais={frais}
+        onClosed={loadProjectData}
+      />
 
       {/* Dialog de modification */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
