@@ -58,9 +58,8 @@ const ChantierClosureDialog = ({
         description: "Le chantier a été marqué comme terminé avec succès.",
       });
 
-      // Passer à l'affichage du bilan
+      // Passer à l'affichage du bilan (ne pas fermer le dialog)
       setStep('bilan');
-      onClosed();
     } catch (error: any) {
       console.error("Erreur clôture chantier:", error);
       toast({
@@ -76,6 +75,9 @@ const ChantierClosureDialog = ({
   const handleDialogClose = () => {
     setStep('confirm');
     onOpenChange(false);
+    if (step === 'bilan') {
+      onClosed(); // Notifier le parent seulement si on ferme après avoir vu le bilan
+    }
   };
 
   return (
