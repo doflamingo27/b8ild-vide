@@ -8,7 +8,7 @@ const plans = [
     name: "Essai Gratuit",
     price: "0",
     duration: "7 jours",
-    description: "Testez B8ild sans engagement",
+    description: "Testez B8ild sur vos chantiers BTP sans engagement",
     features: [
       "1 chantier maximum",
       "Gestion d'équipe complète",
@@ -23,7 +23,7 @@ const plans = [
     name: "Pro",
     price: "49",
     duration: "mois",
-    description: "Pour les artisans et petites équipes",
+    description: "Pour les artisans et petites équipes du BTP",
     features: [
       "Chantiers illimités",
       "Équipes illimitées",
@@ -41,7 +41,7 @@ const plans = [
     price: "490",
     duration: "an",
     badge: "-2 mois offerts",
-    description: "La meilleure offre pour votre entreprise",
+    description: "La meilleure offre pour votre entreprise BTP",
     features: [
       "Tout du plan Pro",
       "2 mois offerts (490€ au lieu de 588€)",
@@ -63,7 +63,7 @@ const Pricing = () => {
             Un tarif simple, <span className="text-gradient-accent">transparent</span>
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            Choisissez la formule adaptée à votre activité
+            Choisissez la formule adaptée à votre activité BTP
           </p>
         </div>
 
