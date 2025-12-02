@@ -44,8 +44,8 @@ const TrustBadges = () => {
     <section className="py-16 bg-gradient-to-br from-muted/50 to-muted/20 border-y border-border">
       <div className="container mx-auto px-4">
         <div className="mb-8 text-center">
-          <p className="text-sm font-bold text-primary uppercase tracking-wider mb-2">Pourquoi nous faire confiance</p>
-          <h3 className="text-2xl font-black text-foreground">Sécurité et conformité garanties</h3>
+          <p className="text-sm font-bold text-primary uppercase tracking-wider mb-2">Pourquoi nous faire confiance pour vos données BTP</p>
+          <h3 className="text-2xl font-black text-foreground">Sécurité et conformité garanties pour vos chantiers BTP</h3>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">

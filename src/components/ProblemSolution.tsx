@@ -7,10 +7,10 @@ const ProblemSolution = () => {
       <div className="container mx-auto px-4">
         <div className="mb-16 text-center animate-fade-up">
           <h2 className="mb-4 text-4xl font-black text-foreground lg:text-5xl">
-            68% des artisans découvrent leurs <span className="text-destructive">pertes trop tard</span>
+            68% des artisans du BTP découvrent leurs <span className="text-destructive">pertes trop tard</span>
           </h2>
           <p className="mx-auto max-w-3xl text-lg text-muted-foreground">
-            Un chantier non suivi = -15 000€ de marge en moyenne. Le problème ? Vous ne le savez qu'à la fin.
+            Un chantier BTP non suivi = -15 000€ de marge en moyenne. Le problème ? Vous ne le savez qu'à la fin.
           </p>
         </div>
 
@@ -22,19 +22,19 @@ const ProblemSolution = () => {
             <ul className="space-y-3 text-muted-foreground">
               <li className="flex items-start gap-2">
                 <span className="text-destructive mt-1">•</span>
-                <span>Suivi manuel des coûts fastidieux et incomplet</span>
+                <span>Suivi manuel des coûts de chantier BTP fastidieux et incomplet</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-destructive mt-1">•</span>
-                <span>Factures éparpillées, calculs approximatifs</span>
+                <span>Factures fournisseurs matériaux BTP éparpillées, calculs approximatifs</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-destructive mt-1">•</span>
-                <span>Dépassements découverts après coup</span>
+                <span>Dépassements de main-d'œuvre découverts après coup</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-destructive mt-1">•</span>
-                <span>Impossible d'anticiper les pertes</span>
+                <span>Impossible d'anticiper les pertes sur vos chantiers BTP</span>
               </li>
             </ul>
           </Card>
