@@ -18,29 +18,22 @@
       "offers": {
         "@type": "AggregateOffer",
         "lowPrice": "49",
-        "highPrice": "249",
+        "highPrice": "490",
         "priceCurrency": "EUR",
         "priceSpecification": [
           {
             "@type": "UnitPriceSpecification",
             "price": "49",
             "priceCurrency": "EUR",
-            "name": "Starter",
-            "billingDuration": "P1M"
-          },
-          {
-            "@type": "UnitPriceSpecification",
-            "price": "99",
-            "priceCurrency": "EUR",
             "name": "Pro",
             "billingDuration": "P1M"
           },
           {
             "@type": "UnitPriceSpecification",
-            "price": "249",
+            "price": "490",
             "priceCurrency": "EUR",
-            "name": "Business",
-            "billingDuration": "P1M"
+            "name": "Annuel",
+            "billingDuration": "P1Y"
           }
         ]
       },
@@ -119,7 +112,7 @@
           "name": "Mes données sont-elles sécurisées ?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Oui. Toutes vos données sont hébergées en France sur des serveurs sécurisés, chiffrées en transit (TLS) et au repos (AES-256). Nous sommes 100% conformes RGPD avec des politiques de sécurité garantissant que seul vous pouvez accéder à vos chantiers."
+            "text": "Oui. Toutes vos données sont hébergées en France sur des serveurs sécurisés, chiffrées en transit et au repos. Nous sommes 100% conformes RGPD et seul votre compte peut accéder à vos chantiers."
           }
         },
         {
@@ -127,7 +120,7 @@
           "name": "Puis-je essayer B8ild gratuitement ?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Oui, nous offrons un essai gratuit de 14 jours sans carte bancaire requise. Vous avez accès à toutes les fonctionnalités sur un nombre illimité de chantiers."
+            "text": "Oui, nous offrons un essai gratuit de 7 jours sans carte bancaire. Vous pouvez tester B8ild sur un chantier complet avec toutes les fonctionnalités."
           }
         }
       ]

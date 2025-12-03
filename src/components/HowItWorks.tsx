@@ -140,7 +140,7 @@ const HowItWorks = () => {
                 Commencer maintenant gratuitement
               </Button>
             </Link>
-            <p className="text-xs text-muted-foreground mt-3">14 jours d'essai • Sans carte bancaire • Annulation facile</p>
+            <p className="text-xs text-muted-foreground mt-3">7 jours d'essai • Sans carte bancaire • Annulation facile</p>
           </div>
         </div>
       </div>
