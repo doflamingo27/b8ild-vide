@@ -4,29 +4,31 @@ import { Star } from "lucide-react";
 const testimonials = [
   {
     name: "Marc Dubois",
-    role: "Électricien",
+    role: "Électricien BTP",
     location: "Lyon",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marc",
     rating: 5,
-    quote: "Avant B8ild, je perdais 10 000€ par an sans m'en rendre compte. Maintenant je sais exactement où j'en suis sur chaque chantier. Le jour critique m'a sauvé 3 fois cette année !",
+    quote:
+      "Avant B8ild, je perdais 10 000€ par an sans m'en rendre compte. Maintenant je sais exactement où j'en suis sur chaque chantier. Le jour critique m'a sauvé 3 fois cette année !",
   },
   {
     name: "Sophie Martin",
-    role: "Plombière",
+    role: "Plombière BTP",
     location: "Marseille",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie",
     rating: 5,
-    quote: "L'import automatique des factures me fait gagner 2h par semaine. Les alertes m'ont permis de réagir avant qu'il soit trop tard sur 2 chantiers. Je recommande à tous mes collègues.",
+    quote:
+      "L'import automatique des factures me fait gagner 2h par semaine. Les alertes m'ont permis de réagir avant qu'il soit trop tard sur 2 chantiers. Je recommande à tous mes collègues.",
   },
   {
     name: "Pierre Leroy",
     role: "Maçon",
     location: "Toulouse",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Pierre",
     rating: 5,
-    quote: "Simple et efficace. J'ai enfin une vision claire de mes coûts. En 3 mois, j'ai augmenté ma marge de 15%. L'équipe support répond en moins de 2h, c'est impressionnant.",
+    quote:
+      "Simple et efficace. J'ai enfin une vision claire de mes coûts. En 3 mois, j'ai augmenté ma marge de 15%. L'équipe support répond en moins de 2h, c'est impressionnant.",
   },
 ];
+
+const getInitials = (name: string) => name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
 
 const Testimonials = () => {
   return (
@@ -50,14 +52,14 @@ const Testimonials = () => {
             >
               <CardContent className="pt-6">
                 <div className="flex items-center gap-4 mb-4">
-                  <img
-                    src={testimonial.image}
-                    alt={testimonial.name}
-                    className="h-16 w-16 rounded-full border-2 border-primary/20"
-                  />
+                  <div className="h-16 w-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg border-2 border-primary/20">
+                    {getInitials(testimonial.name)}
+                  </div>
                   <div>
                     <h3 className="font-black text-foreground">{testimonial.name}</h3>
-                    <p className="text-sm text-muted-foreground">{testimonial.role} • {testimonial.location}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {testimonial.role} • {testimonial.location}
+                    </p>
                   </div>
                 </div>
 

@@ -58,7 +58,7 @@ const UseCases = () => {
             Adapté à <span className="text-gradient-accent">votre métier</span>
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            Problèmes réels, solutions concrètes pour chaque corps de métier du BTP
+            Problèmes réels, solutions concrètes pour chaque corps de métier du BTP — B8ild est exclusivement conçu pour ce secteur.
           </p>
         </div>
 
