@@ -8,7 +8,7 @@ const steps = [
     icon: Building2,
     title: "Créez votre chantier BTP",
     description: "Ajoutez un nouveau chantier BTP avec le devis et les informations client en moins de 2 minutes.",
-    details: "Renseignez nom du chantier, client, référence, dates prévisionnelles et budget. Importez votre devis par OCR en 1 clic, comme sur vos chantiers réels.",
+    details: "Saisissez les infos essentielles (client, budget, dates) et importez votre devis : le reste se calcule tout seul.",
     color: "text-primary",
   },
   {
@@ -16,7 +16,7 @@ const steps = [
     icon: Users,
     title: "Affectez votre équipe terrain",
     description: "Assignez les membres de votre équipe chantier avec leurs coûts horaires et charges (chef de chantier, compagnons, apprentis…).",
-    details: "Sélectionnez les membres, définissez les jours travaillés et les taux horaires. Le coût main-d'œuvre BTP se calcule automatiquement.",
+    details: "Choisissez les membres, indiquez les jours travaillés : le coût main-d'œuvre BTP est calculé automatiquement.",
     color: "text-accent",
   },
   {
@@ -24,7 +24,7 @@ const steps = [
     icon: Calculator,
     title: "Suivez les coûts BTP",
     description: "Importez vos factures fournisseurs matériaux et frais de chantier en temps réel.",
-    details: "Upload de factures par OCR : extraction automatique HT, TVA, TTC. Ajoutez les coûts annexes (location, outillage, déplacements, sous-traitants).",
+    details: "Importez vos factures par OCR et ajoutez vos frais annexes : B8ild tient à jour tous vos coûts BTP.",
     color: "text-warning",
   },
   {
@@ -32,7 +32,7 @@ const steps = [
     icon: TrendingUp,
     title: "Pilotez en temps réel",
     description: "Consultez votre rentabilité et le jour critique à tout moment, depuis le bureau, la base vie ou le camion.",
-    details: "Dashboard avec KPIs en temps réel, graphiques d'évolution, alertes automatiques et export PDF enrichi. Réagissez avant qu'il soit trop tard.",
+    details: "Suivez vos KPIs, votre jour critique et vos alertes en temps réel depuis n'importe où.",
     color: "text-success",
   },
 ];

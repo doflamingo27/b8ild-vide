@@ -6,10 +6,9 @@ const features = [
     title: "Calcul automatique de rentabilité",
     description: "Suivez en temps réel le coût de votre main-d'œuvre, vos charges et votre marge sur chaque chantier BTP.",
     details: [
-      "Agrégation automatique de tous les coûts (factures matériaux, équipes, frais de chantier)",
-      "Mise à jour instantanée à chaque nouvelle dépense ou affectation",
-      "Projection de la marge finale selon l'avancement du chantier",
-      "Comparaison devis initial vs coûts réels (matériaux, sous-traitants, main-d'œuvre)"
+      "Addition automatique des coûts : matériaux, main-d'œuvre et frais annexes.",
+      "Marge actuelle et marge finale estimée mises à jour en temps réel.",
+      "Vue claire chantier par chantier, sans Excel ni calculatrice.",
     ],
     color: "text-accent",
     image: "https://images.unsplash.com/photo-1590490359854-dfba19688d70?w=600&h=400&fit=crop",
@@ -21,10 +20,9 @@ const features = [
     title: "Alertes avant déficit",
     description: "Recevez des notifications 7, 3 et 1 jour avant que votre chantier BTP ne devienne déficitaire.",
     details: [
-      "Alertes par email et notification in-app",
-      "Détection précoce des dérapages budgétaires sur vos chantiers BTP",
-      "Recommandations d'actions correctives automatiques",
-      "Historique des alertes et actions prises par chantier"
+      "Notifications 7, 3 et 1 jour avant le passage en déficit.",
+      "Emails et alertes in-app claires pour chaque chantier.",
+      "Priorisation des chantiers à risque pour agir au bon endroit.",
     ],
     color: "text-danger",
     image: "https://images.unsplash.com/photo-1581090700227-1e37b190418e?w=600&h=400&fit=crop",
@@ -35,10 +33,9 @@ const features = [
     title: "Gestion d'équipe complète",
     description: "Gérez vos équipes chantier, coûts horaires, charges sociales et affectations par chantier.",
     details: [
-      "Calcul automatique du coût/jour par membre (chef de chantier, compagnon, apprenti…)",
-      "Suivi des affectations et disponibilités par chantier BTP",
-      "Gestion des congés et absences",
-      "Statistiques de productivité par équipe et par corps d'état (gros œuvre, second œuvre…)"
+      "Coût/jour calculé automatiquement pour chaque membre.",
+      "Planning des affectations par chantier BTP.",
+      "Suivi simple des absences, congés et statut terrain.",
     ],
     color: "text-primary",
     image: "https://images.unsplash.com/photo-1581090464777-f3220bbe1b8c?w=600&h=400&fit=crop",
@@ -49,10 +46,9 @@ const features = [
     title: "Jour critique précis",
     description: "Connaissez exactement le jour où votre chantier bascule en perte.",
     details: [
-      "Projection mathématique basée sur vos coûts réels et prévus",
-      "Visualisation graphique de l'évolution de la marge chantier",
-      "Simulation d'impact des retards et ajustements",
-      "Compteur de jours rentables restants sur chaque chantier BTP"
+      "Jour exact où le chantier passe en perte calculé automatiquement.",
+      "Courbe simple marge / temps pour expliquer la situation à votre client.",
+      "Nombre de jours rentables restants toujours visible.",
     ],
     color: "text-success",
     image: "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=600&h=400&fit=crop",
@@ -64,10 +60,9 @@ const features = [
     title: "Import factures intelligent",
     description: "Importez vos devis et factures fournisseurs BTP en 1 clic grâce à l'OCR avancé.",
     details: [
-      "Reconnaissance automatique de tous formats PDF/images",
-      "Extraction HT, TVA, TTC, fournisseur, date, SIRET",
-      "Correction manuelle rapide si besoin",
-      "Association automatique aux chantiers par référence de chantier BTP"
+      "Import PDF ou photo de facture en 1 clic.",
+      "Extraction automatique HT, TVA, TTC, fournisseur et date.",
+      "Rattachement direct au bon chantier via la référence.",
     ],
     color: "text-accent",
     image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&h=400&fit=crop",
@@ -78,10 +73,9 @@ const features = [
     title: "Rapports PDF enrichis",
     description: "Exportez des bilans financiers complets avec graphiques et métriques détaillées pour vos chantiers BTP.",
     details: [
-      "Export PDF professionnel en 1 clic",
-      "Synthèse rentabilité avec badges colorés",
-      "Comparaison prévisionnel vs réel",
-      "Sections devis, factures, équipes, coûts annexes BTP"
+      "Rapport PDF clair par chantier ou par période.",
+      "Synthèse de rentabilité avec code couleur BTP.",
+      "Détail devis, factures, équipe et coûts annexes en une vue.",
     ],
     color: "text-purple-500",
     image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=600&h=400&fit=crop",
@@ -92,10 +86,9 @@ const features = [
     title: "IA d'analyse de chantier",
     description: "Intelligence artificielle qui analyse vos chantiers BTP et recommande des optimisations.",
     details: [
-      "Détection automatique des problèmes et risques sur vos chantiers",
-      "Recommandations concrètes et actionnables",
-      "Comparaison aux standards BTP français",
-      "Prévisions de coût final et rentabilité par chantier"
+      "Analyse automatique des données de vos chantiers BTP.",
+      "Liste des risques, points forts et actions prioritaires.",
+      "Comparaison à des marges et délais cibles du secteur.",
     ],
     color: "text-pink-500",
     image: "https://images.unsplash.com/photo-1582719478250-c2c9e2684b1c?w=600&h=400&fit=crop",
@@ -107,10 +100,9 @@ const features = [
     title: "Simulateur pénalités retard",
     description: "Anticipez l'impact financier des retards avec des simulations instantanées.",
     details: [
-      "Configuration flexible des clauses de pénalités prévues à vos marchés",
-      "Graphiques d'impact selon jours de retard",
-      "Comparateur de scénarios multi-paramètres",
-      "Alertes intelligentes et actions recommandées",
+      "Configuration des clauses de pénalités de vos marchés.",
+      "Simulation instantanée de l'impact de X jours de retard.",
+      "Visualisation de la marge avant et après pénalités.",
     ],
     color: "text-orange-500",
     image: "https://images.unsplash.com/photo-1531834685032-c34bf0d84c77?w=600&h=400&fit=crop",
@@ -121,10 +113,9 @@ const features = [
     title: "Notifications intelligentes",
     description: "Alertes par email et dans l'app pour ne jamais manquer un seuil critique.",
     details: [
-      "Notifications personnalisables par type d'alerte",
-      "Résumé quotidien de tous vos chantiers BTP",
-      "Historique des notifications et actions prises",
-      "Désactivation granulaire par catégorie"
+      "Paramétrez uniquement les alertes réellement utiles.",
+      "Résumé quotidien des chantiers clés pour le dirigeant.",
+      "Historique clair de qui a fait quoi et quand.",
     ],
     color: "text-warning",
     image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&h=400&fit=crop",
