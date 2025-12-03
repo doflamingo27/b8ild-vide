@@ -20,7 +20,7 @@ const faqs = [
   },
   {
     question: "Mes données sont-elles sécurisées ? Où sont-elles hébergées ?",
-    answer: "Absolument. Toutes vos données sont hébergées en France sur des serveurs sécurisés (Supabase/AWS EU-West), chiffrées en transit (TLS) et au repos (AES-256). Nous sommes 100% conformes RGPD avec des politiques de sécurité au niveau ligne (RLS) garantissant que seul vous pouvez accéder à vos chantiers. Aucune donnée n'est jamais partagée avec des tiers. Vous pouvez exporter ou supprimer vos données à tout moment.",
+    answer: "Absolument. Toutes vos données sont hébergées en France sur des serveurs sécurisés, chiffrées en transit et au repos. Nous sommes 100% conformes au RGPD et seul votre compte peut accéder à vos chantiers. Aucune donnée n'est jamais partagée avec des tiers et vous pouvez exporter ou supprimer vos données à tout moment.",
   },
   {
     question: "Combien de temps faut-il pour prendre en main B8ild ?",
@@ -28,15 +28,15 @@ const faqs = [
   },
   {
     question: "Puis-je essayer B8ild gratuitement avant de m'abonner ?",
-    answer: "Oui, nous offrons un essai gratuit de 14 jours sans carte bancaire requise. Vous avez accès à toutes les fonctionnalités (import factures, calcul rentabilité, alertes, gestion équipe, export PDF) sur un nombre illimité de chantiers. Aucun engagement, aucune limite artificielle. Si B8ild ne vous convient pas, rien à payer, aucune question posée.",
+    answer: "Oui, nous offrons un essai gratuit de 7 jours sans carte bancaire. Vous pouvez tester B8ild sur un chantier complet avec toutes les fonctionnalités (import factures, calcul de rentabilité, alertes, gestion d'équipe, export PDF). Aucun engagement : si B8ild ne vous convient pas, vous arrêtez simplement à la fin des 7 jours.",
   },
   {
     question: "B8ild est-il compatible avec mon logiciel de facturation existant ?",
-    answer: "B8ild n'est pas un logiciel de facturation mais un outil de pilotage de rentabilité. Il s'intègre parfaitement avec votre flux de travail existant : vous continuez à utiliser votre logiciel de facturation (Henrri, Abby, etc.) et vous importez simplement vos factures fournisseurs dans B8ild (par OCR en 1 clic) pour suivre vos coûts. L'export PDF enrichi de B8ild peut servir de base pour vos bilans financiers.",
+    answer: "B8ild n'est pas un logiciel de facturation mais un outil de pilotage de rentabilité. Vous continuez à utiliser votre logiciel de facturation habituel et vous importez simplement vos factures fournisseurs dans B8ild (par OCR en 1 clic) pour suivre vos coûts. L'export PDF enrichi de B8ild peut servir de base pour vos bilans financiers.",
   },
   {
     question: "Que se passe-t-il si je dépasse le nombre de chantiers de mon forfait ?",
-    answer: "Nos forfaits sont conçus pour s'adapter à votre activité : le plan Starter (49€/mois) permet 10 chantiers actifs, le plan Pro (99€/mois) 50 chantiers, et le plan Business (249€/mois) un nombre illimité. Les chantiers terminés/archivés ne comptent pas dans cette limite. Si vous approchez de votre limite, nous vous préviendrons à l'avance et vous pourrez facilement upgrader votre forfait en 1 clic, avec facturation au prorata.",
+    answer: "Nos forfaits sont volontairement simples : l'essai gratuit vous permet de suivre 1 chantier actif. Le plan Pro (49€/mois) et le plan Annuel (490€/an) offrent un nombre illimité de chantiers actifs et d'équipes. Les chantiers terminés ou archivés ne comptent pas dans cette limite.",
   },
 ];
 
