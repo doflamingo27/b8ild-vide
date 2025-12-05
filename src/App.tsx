@@ -21,6 +21,8 @@ import AuditHistory from "./pages/AuditHistory";
 import NotFound from "./pages/NotFound";
 import FinancialManagement from "./pages/FinancialManagement";
 import Rentabilite from "./pages/Rentabilite";
+import Legal from "./pages/Legal";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +37,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/conditions" element={<Legal />} />
+              <Route path="/confidentialite" element={<Privacy />} />
               <Route
                 element={
                   <ProtectedRoute>

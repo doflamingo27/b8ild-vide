@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { HardHat } from "lucide-react";
 
 const Footer = () => {
@@ -17,13 +18,22 @@ const Footer = () => {
             </div>
           </div>
           <div className="flex gap-8 text-sm font-medium">
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-4">
+            <Link 
+              to="/conditions" 
+              className="text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-4"
+            >
               Conditions
-            </a>
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-4">
+            </Link>
+            <Link 
+              to="/confidentialite" 
+              className="text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-4"
+            >
               Confidentialité
-            </a>
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-4">
+            </Link>
+            <a 
+              href="mailto:support@b8ild.fr" 
+              className="text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-4"
+            >
               Support
             </a>
           </div>
